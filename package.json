@@ -1,0 +1,13 @@
+{
+  "name": "math-calligraphy-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Math calligraphy practice app",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

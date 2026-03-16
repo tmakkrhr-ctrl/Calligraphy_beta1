@@ -1,0 +1,994 @@
+/*
+  このファイルは「見た目」を担当する。
+  app.js が作る HTML 要素に対して、レイアウト・色・余白・ボタン・キャンバス表示を定義する。
+*/
+
+/* 色や角丸などの共通値を変数にしておくと、デザイン調整がしやすい */
+:root {
+  --bg: #edf2fb;
+  --panel: #f9fbff;
+  --ink: #162033;
+  --muted: #5c6980;
+  --line: #cdd9ee;
+  --primary: #1f4e8c;
+  --primary-ink: #ffffff;
+  --secondary: #e8eef9;
+  --secondary-ink: #22304a;
+  --accent: #0f7a6c;
+  --accent-ink: #ffffff;
+  --shadow: 0 20px 50px rgba(23, 40, 77, 0.12);
+  --radius: 20px;
+}
+
+/* width / padding の計算を扱いやすくする定番設定 */
+* {
+  box-sizing: border-box;
+}
+
+/* ページ全体の基本見た目 */
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: math;
+  background:
+    linear-gradient(rgba(31, 78, 140, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 78, 140, 0.07) 1px, transparent 1px),
+    radial-gradient(circle at 12% 8%, rgba(15, 122, 108, 0.12), transparent 38%),
+    radial-gradient(circle at 88% 14%, rgba(31, 78, 140, 0.14), transparent 44%),
+    linear-gradient(180deg, #f4f8ff, #eaf0fb);
+  background-size: 24px 24px, 24px 24px, auto, auto, auto;
+  min-height: 100vh;
+}
+
+/* 画面中央にアプリ全体を配置 */
+.app-shell {
+  width: min(1140px, calc(100% - 24px));
+  margin: 20px auto 32px;
+  position: relative;
+}
+
+.app-header {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(205, 217, 238, 0.9);
+  border-radius: calc(var(--radius) + 2px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 251, 255, 0.92));
+  box-shadow: 0 10px 28px rgba(23, 40, 77, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.app-header-main {
+  min-width: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Router がページを差し替えるための表示領域 */
+.route-host {
+  min-height: 240px;
+}
+
+/* 各ページ共通のカード型コンテナ */
+.page {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(249, 252, 255, 0.94));
+  border: 1px solid rgba(205, 217, 238, 0.95);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+/* ページタイトル行（左:説明 / 右:URLチップなど） */
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.page-head h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-family: math;
+  letter-spacing: 0.01em;
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ページ見出し右側（URLチップ + 戻るボタンなど）を横並びにする */
+.page-head-actions {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* URL を小さく見せるラベル */
+.path-chip {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ホーム画面・セット一覧のカード並び */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+/* ホーム画面の3カードを少し広めに見せる。 */
+.card-grid-home {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.menu-card,
+.set-card,
+.placeholder-card {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 247, 255, 0.95));
+  padding: 14px;
+  text-align: left;
+}
+
+/* button のカードだけ hover 演出を付ける */
+button.menu-card,
+button.set-card {
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+button.menu-card:hover,
+button.menu-card:focus-visible,
+button.set-card:hover,
+button.set-card:focus-visible {
+  outline: none;
+  transform: translateY(-2px) scale(1.003);
+  box-shadow: 0 12px 26px rgba(23, 40, 77, 0.12);
+  border-color: #9fb5df;
+}
+
+.menu-card-title,
+.set-card-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-size: 16px;
+  color: #172847;
+}
+
+.menu-card-desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ホームの各入口カード内に、画像や数式のプレビューを置く。 */
+.menu-card-feature {
+  display: grid;
+  gap: 12px;
+}
+
+.card-preview {
+  min-height: 120px;
+  border: 1px solid rgba(183, 200, 230, 0.9);
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(31, 78, 140, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 78, 140, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 246, 255, 0.92));
+  background-size: 20px 20px, 20px 20px, auto;
+  padding: 12px;
+}
+
+.card-preview-chars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+
+.card-preview-pattern,
+.formula-preview {
+  display: grid;
+  place-items: center;
+  font-family: math;
+  color: #153c6f;
+  font-size: clamp(24px, 3vw, 34px);
+  text-align: center;
+}
+
+.card-preview-pattern p {
+  margin: 0;
+}
+
+.card-preview-settings {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+
+.card-preview-settings span,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(183, 200, 230, 0.95);
+  color: #173765;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.badge-soft {
+  background: rgba(232, 241, 255, 0.92);
+}
+
+.mini-sample {
+  min-height: 76px;
+  border-radius: 12px;
+  border: 1px solid rgba(183, 200, 230, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 6px;
+}
+
+.mini-sample-image {
+  width: 100%;
+  height: 60px;
+  object-fit: contain;
+  display: block;
+}
+
+.mini-sample-fallback {
+  font-family: math;
+  font-size: 30px;
+  color: #0f355d;
+}
+
+/* 練習文字を目立たせる表示 */
+.set-card-chars {
+  font-size: 28px;
+  letter-spacing: 0.1em;
+  font-family: math;
+  color: #0f355d;
+}
+
+/* 練習画面 */
+.practice-layout {
+  display: grid;
+  gap: 14px;
+}
+
+/* 1文字練習は「手本 / キャンバス / 操作」の3分割。 */
+.practice-layout-char {
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr) 250px;
+}
+
+/* 短い表現練習は広いノート領域を優先した2カラム。 */
+.practice-layout-words {
+  grid-template-columns: minmax(0, 1fr) 250px;
+}
+
+.practice-side {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.reference-column,
+.word-main-panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.current-char-card,
+.reference-panel,
+.canvas-panel,
+.status,
+.route-note,
+.placeholder-card,
+.dashboard-card,
+/* .settings-card, */
+.pattern-card {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 14px;
+}
+
+.current-char-card,
+.reference-panel,
+.route-note,
+.placeholder-card,
+.dashboard-card,
+/* .settings-card, */
+.pattern-card {
+  padding: 14px;
+}
+
+.settings-card{
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.route-note {
+  color: var(--muted);
+  font-size: 13px;
+  border-left: 4px solid rgba(31, 78, 140, 0.22);
+}
+
+.label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sub-count {
+  margin: 10px 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+}
+
+.page-indicator {
+  margin: 10px 0 0;
+  text-align: center;
+  font-weight: 700;
+  color: #173765;
+}
+
+.actions {
+  display: grid;
+  gap: 8px;
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(205, 217, 238, 0.85);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(241, 247, 255, 0.72));
+}
+
+.action-row-progress {
+  border-color: rgba(31, 78, 140, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(232, 241, 255, 0.88));
+}
+
+.action-row-practice {
+  grid-template-columns: 1fr;
+}
+
+.action-row .btn {
+  width: 100%;
+}
+
+.action-row-progress .btn-accent {
+  box-shadow: 0 6px 16px rgba(15, 122, 108, 0.2);
+}
+
+/* ボタン共通スタイル（色は下の .btn-* で分ける） */
+.btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  outline: 2px solid transparent;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #245ea8, #1f4e8c);
+  color: var(--primary-ink);
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, #f2f6fd, #e5edf9);
+  color: var(--secondary-ink);
+  border: 1px solid #d2def2;
+}
+
+.btn-accent {
+  background: linear-gradient(180deg, #149382, #0f7a6c);
+  color: var(--accent-ink);
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--secondary-ink);
+  border: 1px solid var(--line);
+}
+
+/* 操作結果メッセージ（例: 手本表示、消去完了） */
+.status {
+  min-height: 44px;
+  padding: 10px;
+  color: var(--muted);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(239, 245, 255, 0.75));
+  font-size: 14px;
+}
+
+.canvas-panel {
+  padding: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 248, 255, 0.9));
+}
+
+.practice-canvas-panel {
+  min-width: 0;
+}
+
+/* キャンバス上部の説明バー */
+.canvas-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.canvas-toolbar p {
+  margin: 0;
+}
+
+/* 実際の描画エリア（背景グリッド + 枠） */
+.canvas-stage {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(rgba(31, 78, 140, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 78, 140, 0.12) 1px, transparent 1px),
+    linear-gradient(rgba(15, 122, 108, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 122, 108, 0.06) 1px, transparent 1px),
+    linear-gradient(180deg, #ffffff, #f2f6ff);
+  background-size: 28px 28px, 28px 28px, 140px 140px, 140px 140px, auto;
+  overflow: hidden;
+  min-height: 460px;
+}
+
+.score-display {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 78, 140, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 18px rgba(23, 40, 77, 0.08);
+  pointer-events: none;
+}
+
+/* 1文字練習の手本専用エリア。キャンバスと分けて見比べやすくする。 */
+.reference-stage {
+  position: relative;
+  min-height: 460px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(rgba(31, 78, 140, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 78, 140, 0.12) 1px, transparent 1px),
+    linear-gradient(180deg, #ffffff, #f2f6ff);
+  background-size: 28px 28px, 28px 28px, auto;
+  overflow: hidden;
+  display: grid; place-items: center;
+}
+
+/* 中央の十字ガイド線（なぞり書きの目安） */
+.canvas-stage::before,
+.canvas-stage::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: rgba(31, 78, 140, 0.22);
+}
+
+.canvas-stage::before {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.canvas-stage::after {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.sample-image{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 22px;
+  opacity:1;
+}
+
+/* 手本画像・手本なしメッセージ・canvas を重ねて配置する */
+.template-image,
+.template-empty,
+.draw-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* 手本画像は薄く表示（上から描いた線が見えるようにする） */
+.template-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 22px;
+  opacity: 0.10;
+  pointer-events: none;
+}
+
+.template-empty {
+  display: grid;
+  place-items: center;
+  color: #6c7890;
+  font-weight: 700;
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.template-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* touch-action: none で、スマホ描画時のスクロール暴発を防ぐ */
+.draw-canvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.placeholder-card h3 {
+  margin: 0 0 8px;
+}
+
+.placeholder-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ホーム上部の学習サマリー。 */
+.dashboard-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dashboard-card-wide {
+  grid-column: span 1;
+}
+
+.app-header-summary,
+.page-head-summary {
+  width: min(100%, 560px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-head-summary-item {
+  min-width: 0;
+}
+
+.app-header-summary .dashboard-value,
+.page-head-summary .dashboard-value {
+  font-size: clamp(20px, 2.2vw, 28px);
+}
+
+.app-header-summary .dashboard-sub,
+.page-head-summary .dashboard-sub {
+  font-size: 13px;
+}
+
+.dashboard-value {
+  margin: 8px 0 4px;
+  font-family: math;
+  font-size: clamp(24px, 3vw, 34px);
+  color: #143a6c;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-sub {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* 一覧カードに説明・プレビュー・回数をまとめて表示する。 */
+.set-card-detailed {
+  display: grid;
+  gap: 12px;
+}
+
+.set-card-meta {
+  display: grid;
+  gap: 6px;
+}
+
+.set-card-desc {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.set-card-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.set-card-foot {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.panel-head .btn {
+  flex-shrink: 0;
+}
+
+.panel-caption {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pattern-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pattern-card {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.pattern-card:hover,
+.pattern-card:focus-visible {
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(23, 40, 77, 0.12);
+  border-color: #9fb5df;
+}
+
+.pattern-card-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.pattern-card-expression {
+  margin: 0 0 8px;
+  font-family: math;
+  font-size: 28px;
+  color: #143a6c;
+}
+
+.pattern-card-note,
+.pattern-helper {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.formula-preview-large {
+  min-height: 120px;
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.word-model-panel {
+  padding-bottom: 18px;
+}
+
+.notebook-panel {
+  min-width: 0;
+}
+
+/* 短い表現練習の下地を、ノート風の横罫にする。 */
+.notebook-stage {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(21, 60, 111, 0.06) 0,
+      rgba(21, 60, 111, 0.06) 2px,
+      transparent 2px,
+      transparent 58px
+    ),
+    linear-gradient(180deg, #ffffff, #f4f8ff);
+}
+
+.notebook-stage::before,
+.notebook-stage::after {
+  display: none;
+}
+
+/* 「下書きを表示」で出す、薄い式全体ガイド。 */
+.guide-overlay {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 68px;
+  font-family: math;
+  font-size: clamp(28px, 4vw, 46px);
+  color: rgba(21, 60, 111, 0.16);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.compact-card {
+  display: grid;
+  gap: 6px;
+}
+
+.practice-title {
+  margin: 0;
+  font-family: math;
+  font-size: 32px;
+  color: #143a6c;
+}
+
+/* 設定画面はフォームとプレビューを並べる。 */
+.settings-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  gap: 14px;
+}
+
+.settings-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.settings-field-toggle {
+  align-items: start;
+}
+
+.settings-label {
+  font-weight: 700;
+  color: #173765;
+}
+
+.text-input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font: inherit;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.inline-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-preview {
+  align-content: start;
+}
+
+.settings-preview-message {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* 練習終了ページの中央表示エリア */
+.success-center {
+  min-height: 280px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+  border: 1px dashed #b5c7e8;
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(31, 78, 140, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 78, 140, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, #ffffff, #f2f7ff);
+  background-size: 20px 20px, 20px 20px, auto;
+  padding: 24px;
+}
+
+.success-title {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 52px);
+  font-family: math;
+  color: #143a6c;
+}
+
+.success-subtitle {
+  margin: 0;
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.success-route {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* JS から表示/非表示を切り替える共通クラス */
+.hidden {
+  display: none !important;
+}
+
+.settings-save-message {
+  position: fixed;
+  top: 10%;
+  left: 40%;
+  z-index: 1000;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: #17683F;
+  color: #ffffff;
+  box-shadow: 0 12px 30px #17683F;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.settings-save-message.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* 画面幅が狭いときは、左右2カラムを1カラムにする */
+@media (max-width: 920px) {
+  .page-head {
+    flex-direction: column;
+  }
+
+  .page-head-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .page-head-actions .path-chip {
+    align-self: flex-end;
+  }
+
+  .app-header-summary,
+  .page-head-summary {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .practice-layout-char,
+  .practice-layout-words,
+  .settings-layout,
+  .dashboard-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .card-preview-chars {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .canvas-stage {
+    min-height: 380px;
+  }
+
+  .reference-stage {
+    min-height: 380px;
+  }
+}
+
+/* OSで「動きを減らす」設定の人向け */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+.canvas-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.score-display {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--primary);
+  background: var(--panel);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
