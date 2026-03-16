@@ -48,7 +48,10 @@
       </div>
       <div class="page-head-summary-item">
         <p class="label">連続日数</p>
-        <p class="dashboard-value">${summary.streakDays}日</p>
+        <p class="dashboard-value dashboard-value-streak">
+          <img class="fire-icon" src="/picto/fire.png" alt="">
+          <span>${summary.streakDays}日</span>
+        </p>
       </div>
       <div class="page-head-summary-item">
         <p class="label">合計練習回数</p>
@@ -69,7 +72,6 @@
         settingsStore: this.settingsStore,
         practiceTracker: this.practiceTracker,
         soundEffects: this.soundEffects,
-        supportMessages: ns.supportMessages,
       };
 
       // file:// 直開きでも動くように、実行環境で URL の扱いを切り替える。
@@ -91,7 +93,7 @@
           { pattern: "/practice/words/:categoryId/success", createPage: () => new ns.WordPracticeSuccessPage(this.router, deps) },
           { pattern: "/practice/words/:categoryId/:patternId", createPage: () => new ns.WordPracticePage(this.router, deps) },
           { pattern: "/practice/words/:categoryId", createPage: () => new ns.WordPatternListPage(this.router, deps) },
-          // 設定画面ではユーザー名・音量・応援表示を編集できる。
+          // 設定画面ではユーザー名・音量・終了画面の演出を編集できる。
           { pattern: "/settings", createPage: () => new ns.SettingsPage(this.router, deps) },
           {
             pattern: "/stats",

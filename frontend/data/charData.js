@@ -99,17 +99,9 @@
   // 設定画面で編集する初期値。
   ns.settingsDefaults = {
     username: "ユーザー",
-    encouragementEnabled: true,
+    praiseAnimationEnabled: true,
     volumeLevel: 3,
   };
-
-  // ステータス欄に添える、短い応援メッセージ候補。
-  ns.supportMessages = [
-    "いい流れです。",
-    "この調子で続けましょう。",
-    "少しずつ整ってきています。",
-    "丁寧に書けています。",
-  ];
 
   // 練習文字 → 画像ファイル名(拡張子なし) の対応表。
   // TemplateResolver（手本）と SampleResolver（「今回の文字」表示）で共通利用する。

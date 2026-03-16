@@ -333,8 +333,8 @@
         const parsed = JSON.parse(raw);
         return {
           username: String(parsed.username || this.defaults.username),
-          encouragementEnabled: Boolean(
-            parsed.encouragementEnabled ?? this.defaults.encouragementEnabled
+          praiseAnimationEnabled: Boolean(
+            parsed.praiseAnimationEnabled ?? parsed.encouragementEnabled ?? this.defaults.praiseAnimationEnabled
           ),
           volumeLevel: ns.clampNumber(
             Number(parsed.volumeLevel ?? this.defaults.volumeLevel),
@@ -384,7 +384,7 @@
       };
       this.state.username = String(this.state.username || this.defaults.username).trim() || this.defaults.username;
       this.state.volumeLevel = ns.clampNumber(Number(this.state.volumeLevel), 0, 5);
-      this.state.encouragementEnabled = Boolean(this.state.encouragementEnabled);
+      this.state.praiseAnimationEnabled = Boolean(this.state.praiseAnimationEnabled);
       this.persist();
       this.notify();
       return this.get();

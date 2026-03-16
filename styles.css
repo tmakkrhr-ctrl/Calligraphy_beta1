@@ -645,6 +645,18 @@ button.set-card:focus-visible {
   font-size: 13px;
 }
 
+.dashboard-value-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fire-icon {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+}
+
 .dashboard-value {
   margin: 8px 0 4px;
   font-family: math;
@@ -863,6 +875,8 @@ button.set-card:focus-visible {
   justify-items: center;
   text-align: center;
   gap: 10px;
+  position: relative;
+  overflow: hidden;
   border: 1px dashed #b5c7e8;
   border-radius: 14px;
   background:
@@ -870,7 +884,7 @@ button.set-card:focus-visible {
     linear-gradient(90deg, rgba(31, 78, 140, 0.05) 1px, transparent 1px),
     linear-gradient(180deg, #ffffff, #f2f7ff);
   background-size: 20px 20px, 20px 20px, auto;
-  padding: 24px;
+  padding: 24px 24px 160px;
 }
 
 .success-title {
@@ -892,6 +906,40 @@ button.set-card:focus-visible {
   font-size: 12px;
   color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.success-praise-area {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: min(180px, 42vw);
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.success-praise-character {
+  width: 100%;
+  max-width: 140px;
+  height: auto;
+  object-fit: contain;
+  transform-origin: center bottom;
+  filter: drop-shadow(0 10px 18px rgba(23, 40, 77, 0.18));
+}
+
+.success-praise-character.is-animated {
+  animation: praise-bounce 0.2s ease-in-out infinite alternate;
+}
+
+@keyframes praise-bounce {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-18px);
+  }
 }
 
 /* JS から表示/非表示を切り替える共通クラス */

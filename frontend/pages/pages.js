@@ -1,24 +1,5 @@
 // 各画面のレイアウトとイベント橋渡しをまとめる。
 (function registerPages(ns) {
-  // 設定が ON のときだけ、画面下のステータスへ応援文を添える。
-  function pickSupportMessage(deps, seedText = "") {
-    const settings = deps.settingsStore?.get?.();
-    const messages = deps.supportMessages || [];
-    if (!settings?.encouragementEnabled || !messages.length) return "";
-
-    const total = deps.practiceTracker?.getSummary?.().totalSessions || 0;
-    const seed = `${seedText}:${total}`;
-    let hash = 0;
-    for (let i = 0; i < seed.length; i += 1) {
-      hash = ((hash * 31) + seed.charCodeAt(i)) >>> 0;
-    }
-    return messages[hash % messages.length];
-  }
-
-  function buildStatusMessage(deps, message, seedText = "") {
-    const support = pickSupportMessage(deps, seedText || message);
-    return support ? `${message} ${support}` : message;
-  }
 
   // ホームや一覧カードで使う、小さな文字プレビュー。
   function createSampleThumbMarkup(char) {
@@ -58,6 +39,15 @@
     return values.reduce((total, value) => total + Number(value || 0), 0);
   }
 
+  function createPraiseMarkup(settings) {
+    const animated = settings?.praiseAnimationEnabled !== false;
+    return `
+      <div class="success-praise-area" aria-hidden="true">
+        <img class="success-praise-character${animated ? " is-animated" : ""}" src="/picto/praise.png" alt="">
+      </div>
+    `;
+  }
+
   class Page {
     constructor(router, deps) {
       this.router = router;
@@ -74,8 +64,8 @@
       this.root = null;
     }
 
-    status(message, seedText = "") {
-      return buildStatusMessage(this.deps, message, seedText);
+    status(message, _seedText = "") {
+      return message;
     }
   }
 
@@ -128,7 +118,7 @@
           <div class="page-head">
             <div>
               <h2>ホーム</h2>
-              <p>練習モードを選んで、書き方を少しずつ整えましょう。</p>
+              <p>練習モードを選んでください</p>
             </div>
             <div class="page-head-actions">
             </div>
@@ -152,11 +142,11 @@
             <button type="button" class="menu-card menu-card-feature" id="start-settings-button">
               <div class="card-preview card-preview-settings">
                 <span>音量 ${settings.volumeLevel}/5</span>
-                <span>応援 ${settings.encouragementEnabled ? "ON" : "OFF"}</span>
+                <span>演出 ${settings.praiseAnimationEnabled ? "ON" : "OFF"}</span>
                 <span>名前変更</span>
               </div>
               <p class="menu-card-title">設定</p>
-              <p class="menu-card-desc">ユーザー名や応援メッセージなどを調整できます。</p>
+              <p class="menu-card-desc">ユーザー名や終了画面の演出などを調整できます。</p>
             </button>
           </div>
         </section>
@@ -332,7 +322,7 @@
 
             <section class="canvas-panel practice-canvas-panel">
               <div class="canvas-toolbar">
-                <p>手本を見ながら下に書き写してください</p>
+                <p>手本を見ながら書き写してください</p>
               </div>
               <div class="canvas-stage" id="canvas-stage">
                 <div id="score-display" class="score-display hidden">一致度: 0%</div>
@@ -744,6 +734,7 @@
       const totalPractice = sumCounts(
         set.chars.map((char) => this.deps.practiceTracker.getItemCount(`char:${set.id}`, char))
       );
+      const settings = this.deps.settingsStore.get();
 
       root.innerHTML = `
         <section class="page success-page">
@@ -758,9 +749,10 @@
           </div>
 
           <div class="success-center">
-            <p class="success-title">練習終了</p>
+            <p class="success-title">練習終了！</p>
             <p class="success-subtitle">合計 ${totalPractice} 回の記録になりました。</p>
             <p class="success-route">${ns.DomUtils.escapeHtml(`/practice/char/${set.id}/success`)}</p>
+            ${createPraiseMarkup(settings)}
           </div>
         </section>
       `;
@@ -1135,6 +1127,7 @@
       const totalPractice = sumCounts(
         category.patterns.map((pattern) => this.deps.practiceTracker.getItemCount(`word:${category.id}`, pattern.id))
       );
+      const settings = this.deps.settingsStore.get();
 
       root.innerHTML = `
         <section class="page success-page">
@@ -1152,6 +1145,7 @@
             <p class="success-title">練習終了</p>
             <p class="success-subtitle">このカテゴリの記録は ${totalPractice} 回です。</p>
             <p class="success-route">${ns.DomUtils.escapeHtml(`/practice/words/${category.id}/success`)}</p>
+            ${createPraiseMarkup(settings)}
           </div>
         </section>
       `;
@@ -1162,7 +1156,7 @@
     }
   }
 
-  // 設定画面: 名前、音量、応援メッセージ表示を編集する。
+  // 設定画面: 名前、音量、終了画面のアニメーション表示を編集する。
   class SettingsPage extends Page {
     mount(root) {
       super.mount(root);
@@ -1195,9 +1189,9 @@
               </label>
 
               <label class="settings-field settings-field-toggle">
-                <span class="settings-label">応援メッセージ</span>
-                <input id="settings-encouragement" type="checkbox" ${settings.encouragementEnabled ? "checked" : ""}>
-                <span class="inline-note">練習中のステータスに短いメッセージを添えます。</span>
+                <span class="settings-label">終了画面のアニメーション</span>
+                <input id="settings-praise-animation" type="checkbox" ${settings.praiseAnimationEnabled ? "checked" : ""}>
+                <span class="inline-note">練習終了時のピクトグラム演出を切り替えます。</span>
               </label>
 
               <div class="settings-actions">
@@ -1211,8 +1205,8 @@
               <p class="label">プレビュー</p>
               <p id="settings-preview-name" class="dashboard-value">${ns.DomUtils.escapeHtml(settings.username)} さん</p>
               <p id="settings-preview-volume" class="dashboard-sub">音量 ${settings.volumeLevel}/5</p>
-              <p id="settings-preview-encouragement" class="settings-preview-message">
-                ${settings.encouragementEnabled ? "応援メッセージは表示されます。" : "応援メッセージは非表示です。"}
+              <p id="settings-preview-praise-animation" class="settings-preview-message">
+                ${settings.praiseAnimationEnabled ? "終了画面のアニメーションは ON です。" : "終了画面のアニメーションは OFF です。"}
               </p>
             </section>
           </div>
@@ -1223,15 +1217,16 @@
     }
 
     bindSettingsEvents() {
-      const homeButton = this.root.querySelector("#settings-home-button");      const form = this.root.querySelector("#settings-form");
+      const homeButton = this.root.querySelector("#settings-home-button");
+      const form = this.root.querySelector("#settings-form");
       const usernameInput = this.root.querySelector("#settings-username");
       const volumeInput = this.root.querySelector("#settings-volume");
       const volumeLabel = this.root.querySelector("#settings-volume-label");
-      const encouragementInput = this.root.querySelector("#settings-encouragement");
+      const praiseAnimationInput = this.root.querySelector("#settings-praise-animation");
       const resetButton = this.root.querySelector("#settings-reset-button");
       const previewName = this.root.querySelector("#settings-preview-name");
       const previewVolume = this.root.querySelector("#settings-preview-volume");
-      const previewEncouragement = this.root.querySelector("#settings-preview-encouragement");
+      const previewPraiseAnimation = this.root.querySelector("#settings-preview-praise-animation");
       const saveMessage = this.root.querySelector("#settings-save-message");
       let saveTimeoutId = null;
       
@@ -1240,9 +1235,9 @@
         previewName.textContent = `${usernameInput.value.trim() || ns.settingsDefaults.username} さん`;
         previewVolume.textContent = `音量 ${volumeInput.value}/5`;
         volumeLabel.textContent = `${volumeInput.value}/5`;
-        previewEncouragement.textContent = encouragementInput.checked
-          ? "応援メッセージは表示されます。"
-          : "応援メッセージは非表示です。";
+        previewPraiseAnimation.textContent = praiseAnimationInput.checked
+          ? "終了画面のアニメーションは ON です。"
+          : "終了画面のアニメーションは OFF です。";
       };
 
       const showSaveMessage = (message) => {
@@ -1278,7 +1273,7 @@
       });
       
       
-      encouragementInput?.addEventListener("change", () => {
+      praiseAnimationInput?.addEventListener("change", () => {
         syncPreview();
       });
 
@@ -1287,7 +1282,7 @@
         const next = this.deps.settingsStore.update({
           username: usernameInput.value,
           volumeLevel: Number(volumeInput.value),
-          encouragementEnabled: encouragementInput.checked,
+          praiseAnimationEnabled: praiseAnimationInput.checked,
         });
 
         this.deps.soundEffects.setVolumeLevel(next.volumeLevel);
@@ -1301,7 +1296,7 @@
         const reset = this.deps.settingsStore.reset();
         usernameInput.value = reset.username;
         volumeInput.value = String(reset.volumeLevel);
-        encouragementInput.checked = reset.encouragementEnabled;
+        praiseAnimationInput.checked = reset.praiseAnimationEnabled;
         this.deps.soundEffects.setVolumeLevel(reset.volumeLevel);
         syncPreview();
       });
