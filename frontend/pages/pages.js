@@ -413,6 +413,8 @@
       this.dom.nextButton.addEventListener("click", () => {
         this.recordCurrentPractice();
         if (!this.deps.session.canGoNext()) {
+          // 最後の文字で終了画面へ進むときだけ歓声を流す。
+          this.deps.soundEffects.playCelebration();
           this.router.navigate(this.currentSuccessRoutePath(), { replace: true });
           return;
         }
@@ -1033,6 +1035,8 @@
       this.dom.nextButton.addEventListener("click", () => {
         this.recordCurrentPractice();
         if (!this.deps.patternSession.canGoNext()) {
+          // 最後の式で終了画面へ進むときだけ歓声を流す。
+          this.deps.soundEffects.playCelebration();
           this.router.navigate(this.currentSuccessRoutePath(), { replace: true });
           return;
         }

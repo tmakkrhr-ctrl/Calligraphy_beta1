@@ -516,8 +516,11 @@
     constructor(volumeLevel = 0) {
       this.volumeLevel = ns.clampNumber(Number(volumeLevel), 0, 5);
       this.audioContext = null;
+      this.celebrationAudio = null;
       this.boundRoot = null;
       this.boundClick = null;
+      this.celebrationAudio = null;
+      this.tapAudio = null;
     }
 
     setVolumeLevel(level) {
@@ -549,8 +552,49 @@
       return this.audioContext;
     }
 
+    // ボタンを押したときに、button.mp3 を先頭から再生する。
     playTap() {
-      this.playTone(392, 0.045);
+      if (this.volumeLevel <= 0 || typeof Audio === "undefined") return;
+
+      if (!this.tapAudio) {
+        this.tapAudio = new Audio(this.getButtonAudioSrc());
+        this.tapAudio.preload = "auto";
+      }
+
+      this.tapAudio.pause();
+      this.tapAudio.currentTime = 0;
+      this.tapAudio.volume = this.volumeLevel / 10;
+      this.tapAudio.play().catch(() => {});
+    }
+
+    // 練習終了時だけ、sound 配下の歓声音声を再生する。
+    playCelebration() {
+      if (this.volumeLevel <= 0 || typeof Audio === "undefined") return;
+
+      if (!this.celebrationAudio) {
+        this.celebrationAudio = new Audio(this.getCelebrationAudioSrc());
+        this.celebrationAudio.preload = "auto";
+      }
+
+      this.celebrationAudio.pause();
+      this.celebrationAudio.currentTime = 0;
+      this.celebrationAudio.volume = this.volumeLevel / 10;
+      this.celebrationAudio.play().catch(() => {});
+    }
+
+    getButtonAudioSrc() {
+      // file:// 直開きと Web サーバー配信の両方で同じ音声を見つけられるようにする。
+      return window.location.protocol === "file:"
+        ? "./sound/button.mp3"
+        : "/sound/button.mp3";
+    }
+
+
+    getCelebrationAudioSrc() {
+      // file:// 直開きと Web サーバー配信の両方で同じ音声を見つけられるようにする。
+      return window.location.protocol === "file:"
+        ? "./sound/ApplauseCheer.mp3"
+        : "/sound/ApplauseCheer.mp3";
     }
 
     playTone(frequency, duration) {
