@@ -1,151 +1,144 @@
 // 文字セットの元データ。
 // 将来は API 取得に置き換えやすいように、まずはデータを先頭にまとめている。
 (function registerCharData(ns) {
+  // 階層: スタート画面 -> 1文字練習 -> 文字の種類
+  ns.charPracticeCategoriesData = [
+    {
+      id: "greek-lower",
+      name: "ギリシャ文字　小文字",
+      description: "α から ω まで、4文字ずつのセットで練習します。",
+      previewChars: ["α", "β", "γ", "δ"],
+      status: "ready",
+    },
+    {
+      id: "greek-upper",
+      name: "ギリシャ文字　大文字",
+      description: "工事中",
+      previewChars: ["Α", "Β", "Γ", "Δ"],
+      status: "construction",
+    },
+    {
+      id: "fraktur-lower",
+      name: "フラクトゥール　小文字",
+      description: "工事中",
+      previewChars: ["a", "b", "c", "d"],
+      status: "construction",
+    },
+    {
+      id: "fraktur-upper",
+      name: "フラクトゥール　大文字",
+      description: "A から Z まで、4文字ずつのセットで練習します。",
+      previewChars: ["フラクトゥールA", "フラクトゥールB", "フラクトゥールC", "フラクトゥールD"],
+      status: "ready",
+    },
+  ];
+
+  // 階層: スタート画面 -> 1文字練習 -> 各文字種別 -> 文字セット
   ns.practiceSetsData = [
     {
       id: "greek-basic1",
-      name: "ギリシャ文字小文字 1",
+      name: "ギリシャ文字　小文字 1",
+      groupId: "greek-lower",
       chars: ["α", "β", "γ", "δ"],
     },
     {
       id: "greek-basic2",
-      name: "ギリシャ文字小文字 2",
+      name: "ギリシャ文字　小文字 2",
+      groupId: "greek-lower",
       chars: ["ε", "ζ", "η", "θ"],
     },
     {
       id: "greek-basic3",
-      name: "ギリシャ文字小文字 3",
+      name: "ギリシャ文字　小文字 3",
+      groupId: "greek-lower",
       chars: ["ι", "κ", "λ", "μ"],
     },
     {
       id: "greek-basic4",
-      name: "ギリシャ文字小文字 4",
+      name: "ギリシャ文字　小文字 4",
+      groupId: "greek-lower",
       chars: ["ν", "ξ", "o", "π"],
     },
     {
       id: "greek-basic5",
-      name: "ギリシャ文字小文字 5",
+      name: "ギリシャ文字　小文字 5",
+      groupId: "greek-lower",
       chars: ["ρ", "σ", "τ", "υ"],
     },
     {
       id: "greek-basic6",
-      name: "ギリシャ文字小文字 6",
+      name: "ギリシャ文字　小文字 6",
+      groupId: "greek-lower",
       chars: ["φ", "χ", "ψ", "ω"],
     },
     {
       id: "fraktur-Capital-basic1",
-      name: "フラクトゥール大文字 1",
+      name: "フラクトゥール　大文字 1",
+      groupId: "fraktur-upper",
       chars: ["フラクトゥールA", "フラクトゥールB", "フラクトゥールC", "フラクトゥールD"],
     },
     {
       id: "fraktur-Capital-basic2",
-      name: "フラクトゥール大文字 2",
+      name: "フラクトゥール　大文字 2",
+      groupId: "fraktur-upper",
       chars: ["フラクトゥールE", "フラクトゥールF", "フラクトゥールG", "フラクトゥールH"],
     },
     {
       id: "fraktur-Capital-basic3",
-      name: "フラクトゥール大文字 3",
+      name: "フラクトゥール　大文字 3",
+      groupId: "fraktur-upper",
       chars: ["フラクトゥールI", "フラクトゥールJ", "フラクトゥールK", "フラクトゥールL"],
     },
     {
       id: "fraktur-Capital-basic4",
-      name: "フラクトゥール大文字 4",
+      name: "フラクトゥール　大文字 4",
+      groupId: "fraktur-upper",
       chars: ["フラクトゥールM", "フラクトゥールN", "フラクトゥールO", "フラクトゥールP"],
     },
     {
       id: "fraktur-Capital-basic5",
-      name: "フラクトゥール大文字 5",
+      name: "フラクトゥール　大文字 5",
+      groupId: "fraktur-upper",
       chars: ["フラクトゥールQ", "フラクトゥールR", "フラクトゥールS", "フラクトゥールT"],
     },
     {
       id: "fraktur-Capital-basic6",
-      name: "フラクトゥール大文字 6",
+      name: "フラクトゥール　大文字 6",
+      groupId: "fraktur-upper",
       chars: ["フラクトゥールU", "フラクトゥールV", "フラクトゥールW", "フラクトゥールX"],
     },
     {
       id: "fraktur-Capital-basi7",
-      name: "フラクトゥール大文字 7",
+      name: "フラクトゥール　大文字 7",
+      groupId: "fraktur-upper",
       chars: ["フラクトゥールY", "フラクトゥールZ"],
     },
     // { id: "fractur-basic1", name: "フラクトゥール 1", chars: ["フラクトゥールa", "フラクトゥールb", "フラクトゥールc", "フラクトゥールd"] }
   ];
 
-  // 「短い表現で練習」で使う、数式パターンごとの練習データ。
+  // 階層: スタート画面 -> 短い表現で練習 -> カテゴリー -> 練習する表現
   ns.patternCategoriesData = [
-    // {
-    //   id: "calculus-patterns",
-    //   name: "微分・積分でよく使う形",
-    //   description: "導関数や積分の表し方を、まとまりで練習します。",
-    //   patterns: [
-    //     {
-    //       id: "derivative-basic",
-    //       label: "導関数の基本形",
-    //       expression: "d/dx f(x) = f'(x)",
-    //       note: "分数形の d/dx と右辺のダッシュに慣れる練習です。",
-    //     },
-    //     {
-    //       id: "integral-basic",
-    //       label: "定積分の形",
-    //       expression: "∫_a^b f(x) dx",
-    //       note: "積分記号と上下の添字のバランスを意識します。",
-    //     },
-    //     {
-    //       id: "series-basic",
-    //       label: "総和の形",
-    //       expression: "Σ_(n=1)^N a_n",
-    //       note: "Σ と添字をひとかたまりで書く練習です。",
-    //     },
-    //   ],
-    // },
     {
-      id: "linear-algebra-patterns",
-      name: "線形代数でよく使う形",
-      description: "集合記号やベクトル・行列の書き方を反復します。",
+      id: "DerivativeIntegral",
+      name: "微分積分学",
+      description: "微分積分学で書くことの多い並びを練習します。",
+      status: "ready",
       patterns: [
         {
-          id: "matrix-basic",
-          label: "行列サイズの表現",
-          expression: "A ∈ ℝ^(2×2)",
-          note: "所属記号と右肩のサイズ表記を整える練習です。",
-          imageid: "matrixExample",
-        },
-        {
-          id: "vector-basic",
-          label: "ベクトルの内積",
-          expression: "u・v = |u||v|cosθ",
-          note: "縦線や cos の続き方を滑らかに書く練習です。",
-          imageid: "vectorExample",
-        },
-        {
-          id: "set-basic",
-          label: "部分空間の表現",
-          expression: "W ⊂ V",
-          note: "包含記号と大文字の間隔を意識します。",
-          imageid: "setExample",
+          id: "delta-epsilon",
+          label: "イプシロンデルタ論法",
+          expression: "∀ε>0 ∃δ>0 ...",
+          note: "イプシロンデルタ論法を一通り書く練習です。",
         },
       ],
     },
     {
-      id: "greek-patterns",
-      name: "ギリシャ文字の並び",
-      description: "授業ノートで続けて書くことの多い並びを練習します。",
-      patterns: [
-        {
-          id: "alpha-beta-gamma",
-          label: "連続するギリシャ文字",
-          expression: "α + β = γ",
-          note: "ギリシャ文字どうしの高さと傾きをそろえます。",
-          imageid: "alphaBetaGammaExample",
-        },
-        {
-          id: "delta-epsilon",
-          label: "ε-δ論法の表現",
-          expression: "∀ε>0 ∃δ>0 ...",
-          note: "イプシロンデルタ論法を一通り書く練習です。",
-          imageid: "epsilonDelta_definitionLimit",
-
-        },
-      ],
+      id: "physics-expressions",
+      name: "物理で使う表現",
+      description: "工事中",
+      status: "construction",
+      previewText: "工事中",
+      patterns: [],
     },
   ];
 
@@ -213,5 +206,11 @@
     // "フラクトゥールb": "frakb",
     // "フラクトゥールc": "frakc",
     // "フラクトゥールd": "frakd",
+  };
+
+  // 練習する短い表現 -> 画像ファイル名(拡張子なし) の対応表。
+  // 「1文字練習」と同じく、画面側ではこの対応表を通して画像を引く。
+  ns.patternSlugMap = {
+    "delta-epsilon": "epsilondelta",
   };
 })(window.MathCalligraphy = window.MathCalligraphy || {});

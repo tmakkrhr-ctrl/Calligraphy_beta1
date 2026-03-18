@@ -18,6 +18,8 @@
   --accent-ink: #ffffff;
   --shadow: 0 20px 50px rgba(23, 40, 77, 0.12);
   --radius: 20px;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --font-display: "Kaisei Opti", "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
 
 /* width / padding の計算を扱いやすくする定番設定 */
@@ -29,7 +31,7 @@
 body {
   margin: 0;
   color: var(--ink);
-  font-family: math;
+  font-family: var(--font-body);
   background:
     linear-gradient(rgba(31, 78, 140, 0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(31, 78, 140, 0.07) 1px, transparent 1px),
@@ -97,7 +99,7 @@ body {
 .page-head h2 {
   margin: 0 0 4px;
   font-size: 22px;
-  font-family: math;
+  font-family: var(--font-display);
   letter-spacing: 0.01em;
 }
 
@@ -137,6 +139,10 @@ body {
 /* ホーム画面の3カードを少し広めに見せる。 */
 .card-grid-home {
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.card-grid-sets {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .menu-card,
@@ -212,7 +218,7 @@ button.set-card:focus-visible {
 .formula-preview {
   display: grid;
   place-items: center;
-  font-family: math;
+  font-family: var(--font-display);
   color: #153c6f;
   font-size: clamp(24px, 3vw, 34px);
   text-align: center;
@@ -220,6 +226,20 @@ button.set-card:focus-visible {
 
 .card-preview-pattern p {
   margin: 0;
+}
+
+.formula-preview-image {
+  width: 100%;
+  max-width: 280px;
+  max-height: 92px;
+  object-fit: contain;
+  display: block;
+}
+
+.formula-preview-fallback {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  color: #153c6f;
 }
 
 .card-preview-settings {
@@ -266,7 +286,7 @@ button.set-card:focus-visible {
 }
 
 .mini-sample-fallback {
-  font-family: math;
+  font-family: var(--font-display);
   font-size: 30px;
   color: #0f355d;
 }
@@ -275,7 +295,7 @@ button.set-card:focus-visible {
 .set-card-chars {
   font-size: 28px;
   letter-spacing: 0.1em;
-  font-family: math;
+  font-family: var(--font-display);
   color: #0f355d;
 }
 
@@ -519,13 +539,17 @@ button.set-card:focus-visible {
   background:
     linear-gradient(rgba(31, 78, 140, 0.12) 1px, transparent 1px),
     linear-gradient(90deg, rgba(31, 78, 140, 0.12) 1px, transparent 1px),
+    linear-gradient(rgba(15, 122, 108, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 122, 108, 0.06) 1px, transparent 1px),
     linear-gradient(180deg, #ffffff, #f2f6ff);
-  background-size: 28px 28px, 28px 28px, auto;
+  background-size: 28px 28px, 28px 28px, 140px 140px, 140px 140px, auto;
   overflow: hidden;
   display: grid; place-items: center;
 }
 
 /* 中央の十字ガイド線（なぞり書きの目安） */
+.reference-stage::before,
+.reference-stage::after,
 .canvas-stage::before,
 .canvas-stage::after {
   content: "";
@@ -534,6 +558,7 @@ button.set-card:focus-visible {
   background: rgba(31, 78, 140, 0.22);
 }
 
+.reference-stage::before,
 .canvas-stage::before {
   top: 50%;
   left: 0;
@@ -541,6 +566,7 @@ button.set-card:focus-visible {
   height: 1px;
 }
 
+.reference-stage::after,
 .canvas-stage::after {
   left: 50%;
   top: 0;
@@ -659,7 +685,7 @@ button.set-card:focus-visible {
 
 .dashboard-value {
   margin: 8px 0 4px;
-  font-family: math;
+  font-family: var(--font-display);
   font-size: clamp(24px, 3vw, 34px);
   color: #143a6c;
   overflow-wrap: anywhere;
@@ -699,6 +725,27 @@ button.set-card:focus-visible {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.set-card-wide-preview {
+  gap: 14px;
+}
+
+.set-card-preview-inline {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(92px, 1fr);
+  grid-template-columns: none;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.page-section-intro {
+  margin-bottom: 14px;
+  color: var(--muted);
+}
+
+.placeholder-card-inline {
+  width: 100%;
 }
 
 .panel-head {
@@ -747,7 +794,19 @@ button.set-card:focus-visible {
 
 .pattern-card-expression {
   margin: 0 0 8px;
-  font-family: math;
+  min-height: 108px;
+}
+
+.pattern-card-image {
+  width: 100%;
+  max-width: 320px;
+  max-height: 108px;
+  object-fit: contain;
+  display: block;
+}
+
+.pattern-card-fallback {
+  font-family: var(--font-display);
   font-size: 28px;
   color: #143a6c;
 }
@@ -772,6 +831,68 @@ button.set-card:focus-visible {
   min-width: 0;
 }
 
+.word-main-panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.word-practice-page {
+  padding: 14px;
+}
+
+.word-practice-page .page-head {
+  margin-bottom: 10px;
+}
+
+.word-practice-page .practice-layout-words {
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 10px;
+  align-items: start;
+}
+
+.word-practice-page .practice-side {
+  gap: 8px;
+}
+
+.word-practice-page .current-char-card,
+.word-practice-page .reference-panel,
+.word-practice-page .canvas-panel,
+.word-practice-page .status {
+  padding: 10px;
+}
+
+.word-practice-page .panel-head {
+  margin-bottom: 8px;
+}
+
+.word-practice-page .panel-caption {
+  margin-top: 2px;
+}
+
+.word-practice-page .canvas-toolbar {
+  padding: 2px 4px 8px;
+  font-size: 13px;
+}
+
+.word-practice-page .actions {
+  gap: 6px;
+}
+
+.word-practice-page .action-row {
+  gap: 6px;
+  padding: 6px;
+}
+
+.word-practice-page .btn {
+  padding: 9px 12px;
+}
+
+.word-practice-page .practice-title {
+  font-size: 28px;
+}
+
 /* 短い表現練習の下地を、ノート風の横罫にする。 */
 .notebook-stage {
   background:
@@ -790,17 +911,30 @@ button.set-card:focus-visible {
   display: none;
 }
 
+.reference-stage-word {
+  min-height: clamp(140px, 20dvh, 190px);
+}
+
+.notebook-stage-practice {
+  min-height: clamp(220px, 35dvh, 300px);
+}
+
 /* 「下書きを表示」で出す、薄い式全体ガイド。 */
 .guide-overlay {
   position: absolute;
   left: 24px;
   right: 24px;
   top: 68px;
-  font-family: math;
+  font-family: var(--font-display);
   font-size: clamp(28px, 4vw, 46px);
   color: rgba(21, 60, 111, 0.16);
   pointer-events: none;
   z-index: 1;
+}
+
+.word-practice-page .guide-overlay {
+  top: 42px;
+  font-size: clamp(24px, 3.2vw, 36px);
 }
 
 .compact-card {
@@ -810,9 +944,49 @@ button.set-card:focus-visible {
 
 .practice-title {
   margin: 0;
-  font-family: math;
+  font-family: var(--font-display);
   font-size: 32px;
   color: #143a6c;
+}
+
+.word-model-expression {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 42px;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.2vw, 36px);
+  color: #143a6c;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.word-model-image {
+  position: absolute;
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  object-fit: contain;
+}
+
+.guide-overlay-image {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 42px;
+  width: calc(100% - 48px);
+  height: calc(100% - 84px);
+  object-fit: contain;
+}
+
+.guide-overlay-image {
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.guide-overlay-fallback {
+  color: rgba(21, 60, 111, 0.16);
 }
 
 /* 設定画面はフォームとプレビューを並べる。 */
@@ -890,7 +1064,7 @@ button.set-card:focus-visible {
 .success-title {
   margin: 0;
   font-size: clamp(32px, 5vw, 52px);
-  font-family: math;
+  font-family: var(--font-display);
   color: #143a6c;
 }
 
@@ -995,6 +1169,7 @@ button.set-card:focus-visible {
 
   .practice-layout-char,
   .practice-layout-words,
+  .word-main-panel,
   .settings-layout,
   .dashboard-strip {
     grid-template-columns: 1fr;

@@ -16,6 +16,15 @@
     return `/samples/${encodeURIComponent(char)}.png`;
   }
 
+  // 「短い表現で練習」の見本画像パスを作る関数。
+  function patternSampleResolver(pattern) {
+    const patternId = typeof pattern === "string" ? pattern : pattern?.id;
+    const mapped = patternId ? ns.patternSlugMap?.[patternId] : "";
+    if (mapped) return `/sampleSentence/${mapped}.png`;
+    if (patternId) return `/sampleSentence/${encodeURIComponent(patternId)}.png`;
+    return "";
+  }
+
   // アプリ全体で共有したい UI 状態を保持するクラス。
   // 例: 手本表示のON/OFF、ステータスメッセージなど。
   class AppState {
@@ -37,35 +46,67 @@
   // コンテンツ取得の窓口。
   // 今はローカル配列を返すだけだが、将来 API に差し替えやすくするための層。
   class ContentRepository {
-    constructor({ charSets, patternCategories }) {
+    constructor({ charPracticeCategories, charSets, patternCategories }) {
+      this.charPracticeCategories = charPracticeCategories;
       this.charSets = charSets;
       this.patternCategories = patternCategories;
     }
 
+    cloneCharCategory(category) {
+      return {
+        ...category,
+        previewChars: [...(category.previewChars || [])],
+      };
+    }
+
+    cloneCharSet(set) {
+      return {
+        ...set,
+        chars: [...set.chars],
+      };
+    }
+
+    clonePatternCategory(category) {
+      return {
+        ...category,
+        patterns: category.patterns.map((pattern) => ({ ...pattern })),
+      };
+    }
+
+    getCharPracticeCategories() {
+      return this.charPracticeCategories.map((category) => this.cloneCharCategory(category));
+    }
+
+    getCharPracticeCategoryById(categoryId) {
+      const found = this.charPracticeCategories.find((category) => category.id === categoryId);
+      if (!found) return null;
+      return this.cloneCharCategory(found);
+    }
+
     getCharSets() {
-      return this.charSets.map((set) => ({ ...set, chars: [...set.chars] }));
+      return this.charSets.map((set) => this.cloneCharSet(set));
+    }
+
+    getCharSetsByGroupId(groupId) {
+      return this.charSets
+        .filter((set) => set.groupId === groupId)
+        .map((set) => this.cloneCharSet(set));
     }
 
     getCharSetById(setId) {
       const found = this.charSets.find((set) => set.id === setId);
       if (!found) return null;
-      return { ...found, chars: [...found.chars] };
+      return this.cloneCharSet(found);
     }
 
     getPatternCategories() {
-      return this.patternCategories.map((category) => ({
-        ...category,
-        patterns: category.patterns.map((pattern) => ({ ...pattern })),
-      }));
+      return this.patternCategories.map((category) => this.clonePatternCategory(category));
     }
 
     getPatternCategoryById(categoryId) {
       const found = this.patternCategories.find((category) => category.id === categoryId);
       if (!found) return null;
-      return {
-        ...found,
-        patterns: found.patterns.map((pattern) => ({ ...pattern })),
-      };
+      return this.clonePatternCategory(found);
     }
   }
 
@@ -103,6 +144,10 @@
 
     getSetName() {
       return this.currentSet?.name ?? "";
+    }
+
+    getGroupId() {
+      return this.currentSet?.groupId ?? null;
     }
 
     getTotalCount() {
@@ -627,6 +672,7 @@
   ns.PatternPracticeSession = PatternPracticeSession;
   ns.TemplateResolver = TemplateResolver;
   ns.TemplateLoader = TemplateLoader;
+  ns.patternSampleResolver = patternSampleResolver;
   ns.ScoringClient = ScoringClient;
   ns.SettingsStore = SettingsStore;
   ns.PracticeTracker = PracticeTracker;

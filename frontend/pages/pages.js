@@ -48,6 +48,15 @@
     `;
   }
 
+  function createConstructionCardMarkup(message = "工事中") {
+    return `
+      <div class="placeholder-card placeholder-card-inline">
+        <h3>工事中</h3>
+        <p>${ns.DomUtils.escapeHtml(message)}</p>
+      </div>
+    `;
+  }
+
   class Page {
     constructor(router, deps) {
       this.router = router;
@@ -103,15 +112,43 @@
     }
   }
 
+  function createPatternPreviewMarkup(pattern, options = {}) {
+    const {
+      wrapperClass = "formula-preview",
+      imageClass = "formula-preview-image",
+      fallbackClass = "formula-preview-fallback",
+    } = options;
+    const fallbackText = pattern?.expression || pattern?.label || "工事中";
+    const src = ns.DomUtils.escapeHtml(ns.patternSampleResolver(pattern));
+    const safeFallbackText = ns.DomUtils.escapeHtml(fallbackText);
+    return `
+      <div class="${ns.DomUtils.escapeHtml(wrapperClass)}">
+        <img class="${ns.DomUtils.escapeHtml(imageClass)}" src="${src}" alt="${safeFallbackText} の見本" data-pattern-fallback-text="${safeFallbackText}">
+        <span class="${ns.DomUtils.escapeHtml(fallbackClass)} hidden">${safeFallbackText}</span>
+      </div>
+    `;
+  }
+
+  function hydratePatternPreviewImages(root) {
+    const images = root.querySelectorAll("img[data-pattern-fallback-text]");
+    for (const image of images) {
+      const fallback = image.parentElement?.querySelector(".formula-preview-fallback, .pattern-card-fallback");
+      if (!fallback) continue;
+      image.addEventListener("error", () => {
+        image.classList.add("hidden");
+        fallback.classList.remove("hidden");
+      }, { once: true });
+    }
+  }
+
   // ホーム画面: 学習サマリーと3つの入口を並べる。
   class StartPage extends Page {
     mount(root) {
       super.mount(root);
 
       const settings = this.deps.settingsStore.get();
-      const summary = this.deps.practiceTracker.getSummary();
-      const firstSet = this.deps.contentRepository.getCharSets()[0];
-      const firstCategory = this.deps.contentRepository.getPatternCategories()[0];
+      const firstCharCategory = this.deps.contentRepository.getCharPracticeCategories()[0];
+      const firstWordCategory = this.deps.contentRepository.getPatternCategories()[0];
 
       root.innerHTML = `
         <section class="page">
@@ -127,15 +164,19 @@
           <div class="card-grid card-grid-home" id="start-menu-grid">
             <button type="button" class="menu-card menu-card-feature" id="start-char-button">
               <div class="card-preview card-preview-chars">
-                ${(firstSet?.chars || []).slice(0, 4).map((char) => createSampleThumbMarkup(char)).join("")}
+                ${(firstCharCategory?.previewChars || []).slice(0, 4).map((char) => createSampleThumbMarkup(char)).join("")}
               </div>
               <p class="menu-card-title">1文字練習</p>
               <p class="menu-card-desc">文字を1つずつ丁寧に練習します。</p>
             </button>
             <button type="button" class="menu-card menu-card-feature" id="start-word-button">
-              <div class="card-preview card-preview-pattern">
-                <p>${ns.DomUtils.escapeHtml(firstCategory?.patterns?.[0]?.expression || "d/dx f(x) = f'(x)")}</p>
-              </div>
+              ${firstWordCategory?.patterns?.[0]
+                ? createPatternPreviewMarkup(firstWordCategory.patterns[0], {
+                  wrapperClass: "card-preview card-preview-pattern",
+                  imageClass: "formula-preview-image",
+                  fallbackClass: "formula-preview-fallback",
+                })
+                : `<div class="card-preview card-preview-pattern"><p>${ns.DomUtils.escapeHtml(firstWordCategory?.previewText || "工事中")}</p></div>`}
               <p class="menu-card-title">短い表現で練習</p>
               <p class="menu-card-desc">授業ノートでよく使う式や並びを練習します。</p>
             </button>
@@ -153,6 +194,7 @@
       `;
 
       hydrateSampleThumbs(root);
+      hydratePatternPreviewImages(root);
 
       root.querySelector("#start-char-button")?.addEventListener("click", () => {
         this.router.navigate("/practice/char");
@@ -166,46 +208,119 @@
     }
   }
 
-  // 1文字練習のセット一覧。PDFの「練習したい文字をタップ」に対応。
-  class CharSetListPage extends Page {
+  // 階層: スタート画面 -> 1文字練習 -> 文字の種類
+  class CharGroupListPage extends Page {
     mount(root) {
       super.mount(root);
-      const sets = this.deps.contentRepository.getCharSets();
+      const groups = this.deps.contentRepository.getCharPracticeCategories();
 
       root.innerHTML = `
         <section class="page">
           <div class="page-head">
             <div>
               <h2>1文字練習</h2>
-              <p>練習したい文字セットを選んでください。</p>
+              <p>まずは練習したい文字の種類を選んでください。</p>
             </div>
             <div class="page-head-actions">
               <span class="path-chip">/practice/char</span>
-              <button id="charset-home-button" class="btn btn-ghost" type="button">ホームへ</button>
+              <button id="char-group-home-button" class="btn btn-ghost" type="button">ホームへ</button>
             </div>
           </div>
-          <div class="card-grid" id="char-set-grid"></div>
+          <div class="card-grid" id="char-group-grid"></div>
         </section>
       `;
 
+      root.querySelector("#char-group-home-button")?.addEventListener("click", () => {
+        this.router.navigate("/");
+      });
+
+      const grid = root.querySelector("#char-group-grid");
+      for (const group of groups) {
+        const sets = this.deps.contentRepository.getCharSetsByGroupId(group.id);
+        const totalPractice = sumCounts(sets.map((set) => sumCounts(
+          set.chars.map((char) => this.deps.practiceTracker.getItemCount(`char:${set.id}`, char))
+        )));
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "set-card set-card-detailed";
+        button.innerHTML = `
+          <div class="set-card-meta">
+            <p class="set-card-title">${ns.DomUtils.escapeHtml(group.name)}</p>
+            <p class="set-card-desc">${ns.DomUtils.escapeHtml(group.description || "")}</p>
+          </div>
+          <div class="set-card-preview">
+            ${(group.previewChars || []).slice(0, 4).map((char) => createSampleThumbMarkup(char)).join("")}
+          </div>
+          <div class="set-card-foot">
+            <span class="badge">${group.status === "construction" ? "工事中" : `${sets.length}セット`}</span>
+            <span class="badge badge-soft">練習 ${totalPractice}回</span>
+          </div>
+        `;
+        button.addEventListener("click", () => this.router.navigate(`/practice/char/${group.id}`));
+        grid.append(button);
+      }
+
+      hydrateSampleThumbs(root);
+    }
+  }
+
+  // 階層: スタート画面 -> 1文字練習 -> 文字の種類 -> 文字セット
+  class CharSetListPage extends Page {
+    mount(root, params) {
+      super.mount(root);
+      const group = this.deps.contentRepository.getCharPracticeCategoryById(params.groupId);
+      if (!group) {
+        this.router.navigate("/practice/char");
+        return;
+      }
+
+      const sets = this.deps.contentRepository.getCharSetsByGroupId(group.id);
+
+      root.innerHTML = `
+        <section class="page">
+          <div class="page-head">
+            <div>
+              <h2>1文字練習</h2>
+              <p>${ns.DomUtils.escapeHtml(group.name)}</p>
+            </div>
+            <div class="page-head-actions">
+              <span class="path-chip">${ns.DomUtils.escapeHtml(`/practice/char/${group.id}`)}</span>
+              <button id="charset-back-button" class="btn btn-ghost" type="button">前の画面へ</button>
+              <button id="charset-home-button" class="btn btn-ghost" type="button">ホームへ</button>
+            </div>
+          </div>
+          <div class="page-section-intro">
+            <p>${ns.DomUtils.escapeHtml(group.status === "construction" ? "工事中" : "練習したい文字セットを選んでください。")}</p>
+          </div>
+          <div class="card-grid card-grid-sets" id="char-set-grid"></div>
+        </section>
+      `;
+
+      root.querySelector("#charset-back-button")?.addEventListener("click", () => {
+        this.router.navigate("/practice/char");
+      });
       root.querySelector("#charset-home-button")?.addEventListener("click", () => {
         this.router.navigate("/");
       });
 
       const grid = root.querySelector("#char-set-grid");
+      if (group.status === "construction" || sets.length === 0) {
+        grid.innerHTML = createConstructionCardMarkup(`${group.name} は工事中です。`);
+        return;
+      }
+
       for (const set of sets) {
         const totalPractice = sumCounts(
           set.chars.map((char) => this.deps.practiceTracker.getItemCount(`char:${set.id}`, char))
         );
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "set-card set-card-detailed";
+        button.className = "set-card set-card-detailed set-card-wide-preview";
         button.innerHTML = `
           <div class="set-card-meta">
             <p class="set-card-title">${ns.DomUtils.escapeHtml(set.name)}</p>
-            <p class="set-card-desc">${ns.DomUtils.escapeHtml(set.description || "")}</p>
           </div>
-          <div class="set-card-preview">
+          <div class="set-card-preview set-card-preview-inline">
             ${set.chars.map((char) => createSampleThumbMarkup(char)).join("")}
           </div>
           <div class="set-card-foot">
@@ -213,7 +328,7 @@
             <span class="badge badge-soft">練習 ${totalPractice}回</span>
           </div>
         `;
-        button.addEventListener("click", () => this.router.navigate(`/practice/char/${set.id}`));
+        button.addEventListener("click", () => this.router.navigate(`/practice/char/${group.id}/${set.id}`));
         grid.append(button);
       }
 
@@ -236,18 +351,27 @@
     mount(root, params) {
       super.mount(root, params);
 
+      const groupId = params.groupId;
       const setId = params.setId;
       const index = Number.parseInt(params.index ?? "0", 10);
       const startIndex = Number.isFinite(index) ? index : 0;
+      const set = this.deps.contentRepository.getCharSetById(setId);
+
+      if (!set || set.groupId !== groupId) {
+        this.root.innerHTML = "";
+        this.router.navigate(groupId ? `/practice/char/${groupId}` : "/practice/char");
+        return;
+      }
 
       const ok = this.deps.session.loadSet(setId, startIndex);
       if (!ok) {
         this.root.innerHTML = "";
-        this.router.navigate("/practice/char");
+        this.router.navigate(`/practice/char/${groupId}`);
         return;
       }
 
       this.deps.appState.currentCharRoute = {
+        groupId: this.deps.session.getGroupId(),
         setId: this.deps.session.getSetId(),
         index: this.deps.session.getCurrentIndex(),
       };
@@ -317,6 +441,9 @@
                   <img id="sample-image" class="sample-image hidden" alt="">
                   <div id="sample-empty" class="sample-empty hidden">手本がありません</div>
                 </div>
+                <p id="page-indicator" class="page-indicator"></p>
+                <p id="practice-count" class="sub-count"></p>
+                <p id="route-note" class="route-note"></p>
               </div>
             </section>
 
@@ -326,6 +453,7 @@
               </div>
               <div class="canvas-stage" id="canvas-stage">
                 <div id="score-display" class="score-display hidden">一致度: 0%</div>
+                <div id="template-placeholder" class="template-placeholder">下書きはボタンで表示できます</div>
                 <img id="template-image" class="template-image hidden" alt="">
                 <div id="template-empty" class="template-empty hidden">下書きがありません</div>
                 <canvas id="draw-canvas" class="draw-canvas" aria-label="文字を書くキャンバス"></canvas>
@@ -425,7 +553,7 @@
       });
 
       this.dom.backListButton.addEventListener("click", () => {
-        this.router.navigate("/practice/char");
+        this.router.navigate(`/practice/char/${this.deps.session.getGroupId()}`);
       });
 
       this.dom.homeButton.addEventListener("click", () => {
@@ -451,6 +579,7 @@
 
     onCharacterChanged(message) {
       this.deps.appState.currentCharRoute = {
+        groupId: this.deps.session.getGroupId(),
         setId: this.deps.session.getSetId(),
         index: this.deps.session.getCurrentIndex(),
       };
@@ -463,11 +592,11 @@
     }
 
     currentRoutePath() {
-      return `/practice/char/${this.deps.session.getSetId()}/${this.deps.session.getCurrentIndex()}`;
+      return `/practice/char/${this.deps.session.getGroupId()}/${this.deps.session.getSetId()}/${this.deps.session.getCurrentIndex()}`;
     }
 
     currentSuccessRoutePath() {
-      return `/practice/char/${this.deps.session.getSetId()}/success`;
+      return `/practice/char/${this.deps.session.getGroupId()}/${this.deps.session.getSetId()}/success`;
     }
 
     // browser では比較用マスクを作り、実際の一致度計算は server に依頼する。
@@ -726,10 +855,11 @@
     mount(root, params) {
       super.mount(root, params);
 
+      const groupId = params.groupId;
       const setId = params.setId;
       const set = this.deps.contentRepository.getCharSetById(setId);
-      if (!set) {
-        this.router.navigate("/practice/char");
+      if (!set || set.groupId !== groupId) {
+        this.router.navigate(groupId ? `/practice/char/${groupId}` : "/practice/char");
         return;
       }
 
@@ -753,7 +883,7 @@
           <div class="success-center">
             <p class="success-title">練習終了！</p>
             <p class="success-subtitle">合計 ${totalPractice} 回の記録になりました。</p>
-            <p class="success-route">${ns.DomUtils.escapeHtml(`/practice/char/${set.id}/success`)}</p>
+            <p class="success-route">${ns.DomUtils.escapeHtml(`/practice/char/${groupId}/${set.id}/success`)}</p>
             ${createPraiseMarkup(settings)}
           </div>
         </section>
@@ -804,15 +934,23 @@
             <p class="set-card-title">${ns.DomUtils.escapeHtml(category.name)}</p>
             <p class="set-card-desc">${ns.DomUtils.escapeHtml(category.description)}</p>
           </div>
-          <div class="formula-preview">${ns.DomUtils.escapeHtml(category.patterns[0]?.expression || "")}</div>
+          ${category.patterns[0]
+            ? createPatternPreviewMarkup(category.patterns[0], {
+              wrapperClass: "formula-preview",
+              imageClass: "formula-preview-image",
+              fallbackClass: "formula-preview-fallback",
+            })
+            : `<div class="formula-preview">${ns.DomUtils.escapeHtml(category.previewText || "工事中")}</div>`}
           <div class="set-card-foot">
-            <span class="badge">${category.patterns.length}パターン</span>
+            <span class="badge">${category.status === "construction" ? "工事中" : `${category.patterns.length}項目`}</span>
             <span class="badge badge-soft">練習 ${practiceCount}回</span>
           </div>
         `;
         button.addEventListener("click", () => this.router.navigate(`/practice/words/${category.id}`));
         grid.append(button);
       }
+
+      hydratePatternPreviewImages(root);
     }
   }
 
@@ -851,13 +989,29 @@
       });
 
       const list = root.querySelector("#pattern-list");
+      if (category.status === "construction" || category.patterns.length === 0) {
+        list.innerHTML = createConstructionCardMarkup(`${category.name} は工事中です。`);
+        return;
+      }
+
       for (const pattern of category.patterns) {
+        if (pattern.status === "construction") {
+          const placeholder = document.createElement("div");
+          placeholder.innerHTML = createConstructionCardMarkup(`${pattern.label || category.name} は工事中です。`);
+          list.append(placeholder.firstElementChild);
+          continue;
+        }
+
         const button = document.createElement("button");
         button.type = "button";
         button.className = "pattern-card";
         button.innerHTML = `
           <p class="pattern-card-title">${ns.DomUtils.escapeHtml(pattern.label)}</p>
-          <p class="pattern-card-expression">${ns.DomUtils.escapeHtml(pattern.expression)}</p>
+          ${createPatternPreviewMarkup(pattern, {
+            wrapperClass: "pattern-card-expression",
+            imageClass: "pattern-card-image",
+            fallbackClass: "pattern-card-fallback",
+          })}
           <p class="pattern-card-note">${ns.DomUtils.escapeHtml(pattern.note)}</p>
         `;
         button.addEventListener("click", () => {
@@ -865,6 +1019,8 @@
         });
         list.append(button);
       }
+
+      hydratePatternPreviewImages(root);
     }
   }
 
@@ -885,6 +1041,13 @@
       const ok = this.deps.patternSession.loadCategory(params.categoryId, params.patternId);
       if (!ok) {
         this.router.navigate("/practice/words");
+        return;
+      }
+
+      const category = this.deps.contentRepository.getPatternCategoryById(params.categoryId);
+      const pattern = this.deps.patternSession.getCurrent();
+      if (!category || category.status === "construction" || !pattern || pattern.status === "construction") {
+        this.router.navigate(`/practice/words/${params.categoryId}`);
         return;
       }
 
@@ -917,7 +1080,7 @@
 
     template() {
       return `
-        <section class="page">
+        <section class="page word-practice-page">
           <div class="page-head">
             <div>
               <h2>短い表現で練習</h2>
@@ -938,21 +1101,20 @@
                   </div>
                   <button id="guide-button" class="btn btn-primary" type="button">下書きを表示</button>
                 </div>
-                <div class="reference-stage">
-                  <img id="sample-image" class="sample-image" alt="">
-                  <div id="sample-empty" class="sample-empty hidden">手本がありません</div>
+                <div class="reference-stage notebook-stage reference-stage-word">
+                  <img id="word-model-image" class="word-model-image hidden" alt="">
+                  <div id="word-model-fallback" class="word-model-expression hidden"></div>
                 </div>
-                <p id="page-indicator" class="page-indicator"></p>
-                <p id="practice-count" class="sub-count"></p>
+                <p id="word-pattern-note" class="pattern-helper"></p>
               </div>
 
               <div class="canvas-panel notebook-panel">
                 <div class="canvas-toolbar">
                   <p>罫線ノートに沿って式のまとまりを書き写せます</p>
-                  <span class="path-chip">/practice/words/:categoryId/:patternId</span>
                 </div>
-                <div class="canvas-stage notebook-stage" id="word-canvas-stage">
-                  <div id="guide-overlay" class="guide-overlay hidden"></div>
+                <div class="canvas-stage notebook-stage notebook-stage-practice" id="word-canvas-stage">
+                  <img id="guide-overlay-image" class="guide-overlay guide-overlay-image hidden" alt="">
+                  <div id="guide-overlay-fallback" class="guide-overlay guide-overlay-fallback hidden"></div>
                   <canvas id="word-draw-canvas" class="draw-canvas" aria-label="式を書くキャンバス"></canvas>
                 </div>
               </div>
@@ -991,12 +1153,14 @@
         categoryName: this.root.querySelector("#word-category-name"),
         routeChip: this.root.querySelector("#word-route-chip"),
         patternTitle: this.root.querySelector("#word-pattern-title"),
-        expression: this.root.querySelector("#word-expression"),
+        modelImage: this.root.querySelector("#word-model-image"),
+        modelFallback: this.root.querySelector("#word-model-fallback"),
         patternNote: this.root.querySelector("#word-pattern-note"),
         progressLabel: this.root.querySelector("#word-progress-label"),
         practiceCount: this.root.querySelector("#word-practice-count"),
         guideButton: this.root.querySelector("#guide-button"),
-        guideOverlay: this.root.querySelector("#guide-overlay"),
+        guideImage: this.root.querySelector("#guide-overlay-image"),
+        guideFallback: this.root.querySelector("#guide-overlay-fallback"),
         clearButton: this.root.querySelector("#word-clear-button"),
         prevButton: this.root.querySelector("#word-prev-button"),
         nextButton: this.root.querySelector("#word-next-button"),
@@ -1092,9 +1256,47 @@
     // 「下書きを表示」で、式全体の薄いガイドをノート上に重ねる。
     renderGuide() {
       const pattern = this.deps.patternSession.getCurrent();
-      this.dom.guideOverlay.textContent = pattern?.expression || "";
-      this.dom.guideOverlay.classList.toggle("hidden", !this.guideVisible);
+      const imageEl = this.dom.guideImage;
+      const fallbackEl = this.dom.guideFallback;
+
+      if (!this.guideVisible) {
+        imageEl.classList.add("hidden");
+        fallbackEl.classList.add("hidden");
+        this.dom.guideButton.textContent = "下書きを表示";
+        return;
+      }
+
+      const src = ns.patternSampleResolver(pattern);
+      imageEl.onload = () => {
+        imageEl.classList.remove("hidden");
+        fallbackEl.classList.add("hidden");
+      };
+      imageEl.onerror = () => {
+        imageEl.classList.add("hidden");
+        fallbackEl.textContent = pattern?.expression || "";
+        fallbackEl.classList.remove("hidden");
+      };
+      imageEl.alt = `下書き: ${pattern?.label || pattern?.expression || ""}`;
+      imageEl.src = src;
       this.dom.guideButton.textContent = this.guideVisible ? "下書きを隠す" : "下書きを表示";
+    }
+
+    renderWordModel(pattern) {
+      const imageEl = this.dom.modelImage;
+      const fallbackEl = this.dom.modelFallback;
+      const src = ns.patternSampleResolver(pattern);
+
+      imageEl.onload = () => {
+        imageEl.classList.remove("hidden");
+        fallbackEl.classList.add("hidden");
+      };
+      imageEl.onerror = () => {
+        imageEl.classList.add("hidden");
+        fallbackEl.textContent = pattern?.expression || "";
+        fallbackEl.classList.remove("hidden");
+      };
+      imageEl.alt = `手本: ${pattern?.label || pattern?.expression || ""}`;
+      imageEl.src = src;
     }
 
     render() {
@@ -1109,7 +1311,7 @@
       this.dom.categoryName.textContent = categoryName;
       this.dom.routeChip.textContent = routePath;
       this.dom.patternTitle.textContent = pattern?.label || "";
-      this.dom.expression.textContent = pattern?.expression || "";
+      this.renderWordModel(pattern);
       this.dom.patternNote.textContent = pattern?.note || "";
       this.dom.progressLabel.textContent = this.deps.patternSession.getProgressLabel();
       this.dom.practiceCount.textContent = `この式は ${practiced} 回練習`;
@@ -1310,6 +1512,7 @@
   ns.Page = Page;
   ns.PlaceholderPage = PlaceholderPage;
   ns.StartPage = StartPage;
+  ns.CharGroupListPage = CharGroupListPage;
   ns.CharSetListPage = CharSetListPage;
   ns.CharPracticePage = CharPracticePage;
   ns.CharPracticeSuccessPage = CharPracticeSuccessPage;
