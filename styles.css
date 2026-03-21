@@ -19,7 +19,7 @@
   --shadow: 0 20px 50px rgba(23, 40, 77, 0.12);
   --radius: 20px;
   --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-  --font-display: "Kaisei Opti", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-display: "Yu Gothic", "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
 
 /* width / padding の計算を扱いやすくする定番設定 */

@@ -565,6 +565,7 @@
       this.boundRoot = null;
       this.boundClick = null;
       this.celebrationAudio = null;
+      this.scorePraiseAudio = null;
       this.tapAudio = null;
     }
 
@@ -627,6 +628,21 @@
       this.celebrationAudio.play().catch(() => {});
     }
 
+    // IPO: 採点結果が95%以上のときだけ、scorePraise.mp3 を再生する。
+    playScorePraise() {
+      if (this.volumeLevel <= 0 || typeof Audio === "undefined") return;
+
+      if (!this.scorePraiseAudio) {
+        this.scorePraiseAudio = new Audio(this.getScorePraiseAudioSrc());
+        this.scorePraiseAudio.preload = "auto";
+      }
+
+      this.scorePraiseAudio.pause();
+      this.scorePraiseAudio.currentTime = 0;
+      this.scorePraiseAudio.volume = this.volumeLevel / 10;
+      this.scorePraiseAudio.play().catch(() => {});
+    }
+
     getButtonAudioSrc() {
       // file:// 直開きと Web サーバー配信の両方で同じ音声を見つけられるようにする。
       return window.location.protocol === "file:"
@@ -640,6 +656,13 @@
       return window.location.protocol === "file:"
         ? "./sound/ApplauseCheer.mp3"
         : "/sound/ApplauseCheer.mp3";
+    }
+
+    // IPO: 採点高得点時の歓声音声ファイルへのパスを返す。
+    getScorePraiseAudioSrc() {
+      return window.location.protocol === "file:"
+        ? "./sound/scorePraise.mp3"
+        : "/sound/scorePraise.mp3";
     }
 
     playTone(frequency, duration) {

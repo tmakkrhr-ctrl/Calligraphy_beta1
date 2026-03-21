@@ -453,7 +453,6 @@
               </div>
               <div class="canvas-stage" id="canvas-stage">
                 <div id="score-display" class="score-display hidden">一致度: 0%</div>
-                <div id="template-placeholder" class="template-placeholder">下書きはボタンで表示できます</div>
                 <img id="template-image" class="template-image hidden" alt="">
                 <div id="template-empty" class="template-empty hidden">下書きがありません</div>
                 <canvas id="draw-canvas" class="draw-canvas" aria-label="文字を書くキャンバス"></canvas>
@@ -623,6 +622,10 @@
         const score = ns.clampNumber(Number(result?.score ?? 0), 0, 100);
         this.dom.scoreDisplay.textContent = `一致度: ${score}%`;
         this.dom.scoreDisplay.classList.remove("hidden");
+        // IPO: 採点結果が95%以上なら、採点達成時の歓声音を再生する。
+        if (score >= 95) {
+          this.deps.soundEffects.playScorePraise();
+        }
         this.statusBar.set(`採点完了: 一致度 ${score}%`);
       } catch (error) {
         this.statusBar.set(this.getScoringErrorMessage(error));
@@ -1416,6 +1419,10 @@
               </p>
             </section>
           </div>
+        </section>
+        <section class="reference">
+          <p> 音声は「効果音ラボ」 https://soundeffect-lab.info/，
+          画像は「human pictogram 2.0」 https://pictogram2.com/ よりお借りしました． <p>
         </section>
       `;
 
