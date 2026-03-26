@@ -405,6 +405,8 @@
     }
 
     unmount() {
+      this.invalidateAlikeCheck();
+      this.isAlikeChecking = false;
       if (this.strokeCanvas) {
         this.strokeCanvas.unmount();
         this.strokeCanvas = null;
@@ -455,6 +457,7 @@
                 <div id="score-display" class="score-display hidden">一致度: 0%</div>
                 <img id="template-image" class="template-image hidden" alt="">
                 <div id="template-empty" class="template-empty hidden">下書きがありません</div>
+                <img id="alike-image" class="hidden" alt="" aria-hidden="true">
                 <canvas id="draw-canvas" class="draw-canvas" aria-label="文字を書くキャンバス"></canvas>
               </div>
             </section>
@@ -479,6 +482,13 @@
               <div id="status-message" class="status" role="status"></div>
             </aside>
           </div>
+
+          <div id="alike-notice-popup" class="alike-notice-popup hidden" role="status" aria-live="assertive" aria-atomic="true">
+            <div class="alike-notice-card">
+              <img class="alike-notice-image" src="${window.location.protocol === "file:" ? "./picto/alikeNotice.png" : "/picto/alikeNotice.png"}" alt="">
+              <p id="alike-notice-text" class="alike-notice-text"></p>
+            </div>
+          </div>
         </section>
       `;
     }
@@ -502,11 +512,14 @@
         templatePlaceholder: this.root.querySelector("#template-placeholder"),
         templateImage: this.root.querySelector("#template-image"),
         templateEmpty: this.root.querySelector("#template-empty"),
+        alikeImage: this.root.querySelector("#alike-image"),
         sampleImage: this.root.querySelector("#sample-image"),
         sampleEmpty: this.root.querySelector("#sample-empty"),
         canvasStage: this.root.querySelector("#canvas-stage"),
         canvas: this.root.querySelector("#draw-canvas"),
         scoreDisplay: this.root.querySelector("#score-display"),
+        alikeNoticePopup: this.root.querySelector("#alike-notice-popup"),
+        alikeNoticeText: this.root.querySelector("#alike-notice-text"),
       };
     }
 
@@ -517,7 +530,19 @@
         this.renderReferencePlaceholder();
       });
 
+      // ペンが止まってから 1.5 秒後にだけ、似字チェックを走らせる。
+      this.dom.canvas.addEventListener("pointerdown", () => {
+        this.invalidateAlikeCheck();
+      });
+      this.dom.canvas.addEventListener("pointerup", () => {
+        this.scheduleAlikeCheck();
+      });
+      this.dom.canvas.addEventListener("pointercancel", () => {
+        this.invalidateAlikeCheck();
+      });
+
       this.dom.clearButton.addEventListener("click", () => {
+        this.invalidateAlikeCheck();
         this.strokeCanvas.clear();
         this.resetScoreDisplay();
         this.statusBar.set(this.status("文字を消しました。", this.deps.session.getCurrent()));
@@ -558,6 +583,10 @@
       this.dom.homeButton.addEventListener("click", () => {
         this.router.navigate("/");
       });
+
+      this.dom.alikeNoticePopup?.addEventListener("click", () => {
+        this.hideAlikeNotice();
+      });
     }
 
     // 「次へ」で進むタイミングに、現在の文字の練習回数を記録する。
@@ -577,6 +606,7 @@
     }
 
     onCharacterChanged(message) {
+      this.invalidateAlikeCheck();
       this.deps.appState.currentCharRoute = {
         groupId: this.deps.session.getGroupId(),
         setId: this.deps.session.getSetId(),
@@ -617,13 +647,11 @@
 
       try {
         this.setScoreLoading(true);
-        const payload = this.createScoringPayload(sampleImage, strokes, this.strokeCanvas.canvasEl);
-        const result = await this.deps.scoringClient.scoreDrawing(payload);
-        const score = ns.clampNumber(Number(result?.score ?? 0), 0, 100);
+        const score = await this.requestScoreAgainstImage(sampleImage);
         this.dom.scoreDisplay.textContent = `一致度: ${score}%`;
         this.dom.scoreDisplay.classList.remove("hidden");
-        // IPO: 採点結果が95%以上なら、採点達成時の歓声音を再生する。
-        if (score >= 95) {
+        // IPO: 採点結果が90%以上なら、採点達成時の歓声音を再生する。
+        if (score >= 90) {
           this.deps.soundEffects.playScorePraise();
         }
         this.statusBar.set(`採点完了: 一致度 ${score}%`);
@@ -633,6 +661,93 @@
       } finally {
         this.setScoreLoading(false);
       }
+    }
+
+    // 同じ採点 API を使って、任意の比較画像との一致度を返す。
+    async requestScoreAgainstImage(sampleImage) {
+      const strokes = this.strokeCanvas.getStrokes();
+      const payload = this.createScoringPayload(sampleImage, strokes, this.strokeCanvas.canvasEl);
+      const result = await this.deps.scoringClient.scoreDrawing(payload);
+      return ns.clampNumber(Number(result?.score ?? 0), 0, 100);
+    }
+
+    scheduleAlikeCheck() {
+      this.cancelAlikeCheck();
+      if (!ns.resolveAlikeChar(this.deps.session.getCurrent())) return;
+      if (this.strokeCanvas.getStrokes().length === 0) return;
+
+      const checkVersion = this.alikeCheckVersion || 0;
+      this.alikeCheckTimeoutId = window.setTimeout(() => {
+        this.alikeCheckTimeoutId = null;
+        this.checkAlikeCharacter(checkVersion);
+      }, 1000);
+    }
+
+    cancelAlikeCheck() {
+      if (!this.alikeCheckTimeoutId) return;
+      window.clearTimeout(this.alikeCheckTimeoutId);
+      this.alikeCheckTimeoutId = null;
+    }
+
+    invalidateAlikeCheck() {
+      this.alikeCheckVersion = (this.alikeCheckVersion || 0) + 1;
+      this.cancelAlikeCheck();
+      this.hideAlikeNotice();
+    }
+
+    // IPO: 似字画像との一致度が高いときは、注意ポップアップを表示する。
+    async checkAlikeCharacter(checkVersion) {
+      if (this.isScoring || this.isAlikeChecking) return;
+
+      const alikeChar = ns.resolveAlikeChar(this.deps.session.getCurrent());
+      const alikeImage = this.dom.alikeImage;
+      const strokes = this.strokeCanvas.getStrokes();
+      if (!alikeChar || !alikeImage || strokes.length === 0) return;
+      if (!alikeImage.complete || alikeImage.naturalWidth === 0) return;
+
+      try {
+        this.isAlikeChecking = true;
+        const score = await this.requestScoreAgainstImage(alikeImage);
+        if (checkVersion !== (this.alikeCheckVersion || 0)) return;
+        if (score >= 60) {
+          this.showAlikeNotice(`${alikeChar} に似ているので注意!`);
+        }
+      } catch (error) {
+        console.error("Alike check error:", error);
+      } finally {
+        this.isAlikeChecking = false;
+      }
+    }
+
+    // 似字警告は画像付きのポップアップで表示し、同時に通知音を鳴らす。
+    showAlikeNotice(message) {
+      const popupEl = this.dom.alikeNoticePopup;
+      const textEl = this.dom.alikeNoticeText;
+      if (!popupEl || !textEl) return;
+
+      if (this.alikeNoticeHideTimeoutId) {
+        window.clearTimeout(this.alikeNoticeHideTimeoutId);
+      }
+
+      textEl.textContent = message;
+      popupEl.classList.remove("hidden");
+      popupEl.classList.add("is-visible");
+      this.deps.soundEffects.playAlikeNotice();
+
+      this.alikeNoticeHideTimeoutId = window.setTimeout(() => {
+        this.hideAlikeNotice();
+      }, 3600);
+    }
+
+    hideAlikeNotice() {
+      const popupEl = this.dom?.alikeNoticePopup;
+      if (this.alikeNoticeHideTimeoutId) {
+        window.clearTimeout(this.alikeNoticeHideTimeoutId);
+        this.alikeNoticeHideTimeoutId = null;
+      }
+      if (!popupEl) return;
+      popupEl.classList.add("hidden");
+      popupEl.classList.remove("is-visible");
     }
 
     // 比較用データは browser で作るが、送信量を減らすため固定サイズへ縮小する。
@@ -826,8 +941,22 @@
       imageEl.src = src;
     }
 
+    // 似字チェック用の画像は DOM に置くだけにして、画面上には見せない。
+    renderAlikeImage(currentChar) {
+      const imageEl = this.dom.alikeImage;
+      if (!imageEl) return;
+
+      const src = ns.alikeResolver(currentChar);
+      if (!src) {
+        imageEl.removeAttribute("src");
+        return;
+      }
+
+      imageEl.src = src;
+    }
 
     renderReferencePlaceholder() {
+      if (!this.dom.templatePlaceholder) return;
       const visible = this.deps.appState.templateVisible;
       this.dom.templatePlaceholder.classList.toggle("hidden", visible);
     }
@@ -842,6 +971,7 @@
 
       this.dom.setName.textContent = setName;
       this.renderSampleImage(currentChar);
+      this.renderAlikeImage(currentChar);
       this.dom.pageIndicator.textContent = `${currentIndex + 1}/${total}`;
       this.dom.practiceCount.textContent = `これまでに ${practiced} 回練習`;
       this.dom.routeChip.textContent = routePath;

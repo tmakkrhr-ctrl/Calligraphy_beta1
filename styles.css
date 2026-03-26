@@ -1145,6 +1145,67 @@ button.set-card:focus-visible {
   transform: translateY(0);
 }
 
+.alike-notice-popup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  width: min(calc(20vh * 2.4086), calc(100vw - 24px));
+}
+
+.alike-notice-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1792 / 744;
+  filter: drop-shadow(0 18px 36px rgba(23, 63, 108, 0.22));
+}
+
+.alike-notice-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.alike-notice-text {
+  position: absolute;
+  top: 15%;
+  left: 2.5%;
+  width: 74%;
+  height: 52%;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(6px, 1vw, 14px);
+  text-align: center;
+  color: #1a8a3c;
+  font-family: var(--font-display);
+  font-size: clamp(10px, 1.1vw, 18px);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.9);
+}
+
+.alike-notice-popup.is-visible {
+  animation: alike-notice-pop 0.24s ease-out;
+}
+
+@keyframes alike-notice-pop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
 
 /* 画面幅が狭いときは、左右2カラムを1カラムにする */
 @media (max-width: 920px) {
@@ -1189,6 +1250,21 @@ button.set-card:focus-visible {
 
   .reference-stage {
     min-height: 380px;
+  }
+
+  .alike-notice-popup {
+    bottom: 12px;
+    width: min(calc(20vh * 2.4086), calc(100vw - 12px));
+  }
+
+  .alike-notice-text {
+    top: 16%;
+    left: 3%;
+    width: 73%;
+    height: 50%;
+    padding: clamp(4px, 1vw, 10px);
+    font-size: clamp(8px, 1.6vw, 13px);
+    line-height: 1.1;
   }
 }
 

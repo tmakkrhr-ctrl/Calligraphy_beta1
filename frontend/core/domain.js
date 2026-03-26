@@ -16,6 +16,20 @@
     return `/samples/${encodeURIComponent(char)}.png`;
   }
 
+  // 練習中の文字に対して、見間違えやすい比較用文字を返す。
+  function resolveAlikeChar(char) {
+    const slug = ns.charSlugMap?.[char];
+    if (!slug) return "";
+    return ns.alikeCharMap?.[slug] || "";
+  }
+
+  // 似字チェック用の比較画像パスを作る関数。
+  function alikeResolver(char) {
+    const alikeChar = resolveAlikeChar(char);
+    if (!alikeChar) return "";
+    return `/alike/${encodeURIComponent(alikeChar)}.png`;
+  }
+
   // 「短い表現で練習」の見本画像パスを作る関数。
   function patternSampleResolver(pattern) {
     const patternId = typeof pattern === "string" ? pattern : pattern?.id;
@@ -566,6 +580,7 @@
       this.boundClick = null;
       this.celebrationAudio = null;
       this.scorePraiseAudio = null;
+      this.alikeNoticeAudio = null;
       this.tapAudio = null;
     }
 
@@ -628,7 +643,7 @@
       this.celebrationAudio.play().catch(() => {});
     }
 
-    // IPO: 採点結果が95%以上のときだけ、scorePraise.mp3 を再生する。
+    // 採点結果が95%以上のときだけ、scorePraise.mp3 を再生する。
     playScorePraise() {
       if (this.volumeLevel <= 0 || typeof Audio === "undefined") return;
 
@@ -641,6 +656,21 @@
       this.scorePraiseAudio.currentTime = 0;
       this.scorePraiseAudio.volume = this.volumeLevel / 10;
       this.scorePraiseAudio.play().catch(() => {});
+    }
+
+    // 似字警告ポップアップを出すときに、notice 音声を再生する。
+    playAlikeNotice() {
+      if (this.volumeLevel <= 0 || typeof Audio === "undefined") return;
+
+      if (!this.alikeNoticeAudio) {
+        this.alikeNoticeAudio = new Audio(this.getAlikeNoticeAudioSrc());
+        this.alikeNoticeAudio.preload = "auto";
+      }
+
+      this.alikeNoticeAudio.pause();
+      this.alikeNoticeAudio.currentTime = 0;
+      this.alikeNoticeAudio.volume = this.volumeLevel / 10;
+      this.alikeNoticeAudio.play().catch(() => {});
     }
 
     getButtonAudioSrc() {
@@ -663,6 +693,13 @@
       return window.location.protocol === "file:"
         ? "./sound/scorePraise.mp3"
         : "/sound/scorePraise.mp3";
+    }
+
+    // 似字警告ポップアップ用の音声ファイルへのパスを返す。
+    getAlikeNoticeAudioSrc() {
+      return window.location.protocol === "file:"
+        ? "./sound/alikeNotice.mp3"
+        : "/sound/alikeNotice.mp3";
     }
 
     playTone(frequency, duration) {
@@ -689,6 +726,8 @@
   }
 
   ns.sampleResolver = sampleResolver;
+  ns.resolveAlikeChar = resolveAlikeChar;
+  ns.alikeResolver = alikeResolver;
   ns.AppState = AppState;
   ns.ContentRepository = ContentRepository;
   ns.PracticeSession = PracticeSession;
