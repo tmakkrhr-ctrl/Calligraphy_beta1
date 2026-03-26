@@ -691,7 +691,7 @@
         this.isAlikeChecking = true;
         const score = await this.requestScoreAgainstImage(alikeImage);
         if (checkVersion !== (this.alikeCheckVersion || 0)) return;
-        if (score >= 60) {
+        if (score >= 45) {
           this.showAlikeNotice(`${alikeChar} に似ているので注意!`);
         }
       } catch (error) {
@@ -896,7 +896,9 @@
     }
 
     updateActionLabels() {
-      this.dom.prevButton.classList.toggle("hidden", !this.deps.session.canGoPrev());
+      const canGoPrev = this.deps.session.canGoPrev();
+      this.dom.prevButton.classList.toggle("btn-slot-hidden", !canGoPrev);
+      this.dom.prevButton.disabled = !canGoPrev;
       this.dom.nextButton.disabled = false;
       this.dom.nextButton.textContent = this.deps.session.canGoNext() ? "次の文字へ" : "練習終了へ";
     }
@@ -993,8 +995,8 @@
           </div>
 
           <div class="success-center">
-            <p class="success-title">練習終了！</p>
-            <p class="success-subtitle">合計 ${totalPractice} 回の記録になりました。</p>
+            <p class="success-title">練習終わり！</p>
+            <p class="success-subtitle">練習回数:  ${totalPractice} 回</p>
             ${createPraiseMarkup(settings)}
           </div>
         </section>
@@ -1017,7 +1019,6 @@
           <div class="page-head">
             <div>
               <h2>短い表現で練習</h2>
-              <p>よく使う式や文字の並びを、まとまりで練習します。</p>
             </div>
             <div class="page-head-actions">
               <button id="word-home-button" class="btn btn-ghost" type="button">ホームへ</button>
@@ -1504,15 +1505,6 @@
                 <p id="settings-save-message" class="settings-save-message hidden" aria-live="polite"></p>
               </div>
             </form>
-
-            <section class="settings-card settings-preview">
-              <p class="label">プレビュー</p>
-              <p id="settings-preview-name" class="dashboard-value">${ns.DomUtils.escapeHtml(settings.username)} さん</p>
-              <p id="settings-preview-volume" class="dashboard-sub">音量 ${settings.volumeLevel}/5</p>
-              <p id="settings-preview-praise-animation" class="settings-preview-message">
-                ${settings.praiseAnimationEnabled ? "終了画面のアニメーションは ON です。" : "終了画面のアニメーションは OFF です。"}
-              </p>
-            </section>
           </div>
         </section>
         <section class="reference">
@@ -1532,20 +1524,12 @@
       const volumeLabel = this.root.querySelector("#settings-volume-label");
       const praiseAnimationInput = this.root.querySelector("#settings-praise-animation");
       const resetButton = this.root.querySelector("#settings-reset-button");
-      const previewName = this.root.querySelector("#settings-preview-name");
-      const previewVolume = this.root.querySelector("#settings-preview-volume");
-      const previewPraiseAnimation = this.root.querySelector("#settings-preview-praise-animation");
       const saveMessage = this.root.querySelector("#settings-save-message");
       let saveTimeoutId = null;
       
-      // フォーム入力に合わせて、右側のプレビューもその場で更新する。
-      const syncPreview = () => {
-        previewName.textContent = `${usernameInput.value.trim() || ns.settingsDefaults.username} さん`;
-        previewVolume.textContent = `音量 ${volumeInput.value}/5`;
+      // フォーム値に合わせて、その場で補助表示を更新する。
+      const syncSettingsForm = () => {
         volumeLabel.textContent = `${volumeInput.value}/5`;
-        previewPraiseAnimation.textContent = praiseAnimationInput.checked
-          ? "終了画面のアニメーションは ON です。"
-          : "終了画面のアニメーションは OFF です。";
       };
 
       const showSaveMessage = (message) => {
@@ -1573,16 +1557,16 @@
 
       volumeInput?.addEventListener("input", () => {
         this.deps.soundEffects.setVolumeLevel(Number(volumeInput.value));
-        syncPreview();
+        syncSettingsForm();
       });
       
       usernameInput?.addEventListener("input", () => {
-        syncPreview();
+        syncSettingsForm();
       });
       
       
       praiseAnimationInput?.addEventListener("change", () => {
-        syncPreview();
+        syncSettingsForm();
       });
 
       form?.addEventListener("submit", (event) => {
@@ -1594,7 +1578,7 @@
         });
 
         this.deps.soundEffects.setVolumeLevel(next.volumeLevel);
-        syncPreview();
+        syncSettingsForm();
 
         showSaveMessage("設定を変更しました。");
       });
@@ -1606,7 +1590,7 @@
         volumeInput.value = String(reset.volumeLevel);
         praiseAnimationInput.checked = reset.praiseAnimationEnabled;
         this.deps.soundEffects.setVolumeLevel(reset.volumeLevel);
-        syncPreview();
+        syncSettingsForm();
       });
     }
   }

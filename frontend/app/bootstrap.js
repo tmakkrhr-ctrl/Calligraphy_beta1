@@ -44,7 +44,6 @@
 
       this.headerSummaryRoot.innerHTML = `
       <div class="page-head-summary-item">
-        <p class="label">ユーザー</p>
         <p class="dashboard-value">${window.MathCalligraphy.DomUtils.escapeHtml(settings.username)} さん</p>
       </div>
       <div class="page-head-summary-item">
