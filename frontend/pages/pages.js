@@ -1043,7 +1043,6 @@
         button.innerHTML = `
           <div class="set-card-meta">
             <p class="set-card-title">${ns.DomUtils.escapeHtml(category.name)}</p>
-            <p class="set-card-desc">${ns.DomUtils.escapeHtml(category.description)}</p>
           </div>
           ${category.patterns[0]
             ? createPatternPreviewMarkup(category.patterns[0], {
@@ -1122,7 +1121,6 @@
             imageClass: "pattern-card-image",
             fallbackClass: "pattern-card-fallback",
           })}
-          <p class="pattern-card-note">${ns.DomUtils.escapeHtml(pattern.note)}</p>
         `;
         button.addEventListener("click", () => {
           this.router.navigate(`/practice/words/${category.id}/${pattern.id}`);
@@ -1209,7 +1207,7 @@
                   <button id="guide-button" class="btn btn-primary" type="button">下書きを表示</button>
                 </div>
                 <div class="reference-stage notebook-stage reference-stage-word">
-                  <img id="word-model-image" class="word-model-image hidden" alt="">
+                  <img id="word-model-image" class="word-stage-image hidden" alt="">
                   <div id="word-model-fallback" class="word-model-expression hidden"></div>
                 </div>
                 <p id="word-pattern-note" class="pattern-helper"></p>
@@ -1220,7 +1218,7 @@
                   <p>罫線ノートに沿って式のまとまりを書き写せます</p>
                 </div>
                 <div class="canvas-stage notebook-stage notebook-stage-practice" id="word-canvas-stage">
-                  <img id="guide-overlay-image" class="guide-overlay guide-overlay-image hidden" alt="">
+                  <img id="guide-overlay-image" class="word-stage-image word-stage-image-guide hidden" alt="">
                   <div id="guide-overlay-fallback" class="guide-overlay guide-overlay-fallback hidden"></div>
                   <canvas id="word-draw-canvas" class="draw-canvas" aria-label="式を書くキャンバス"></canvas>
                 </div>
@@ -1359,34 +1357,33 @@
     // 「下書きを表示」で、式全体の薄いガイドをノート上に重ねる。
     renderGuide() {
       const pattern = this.deps.patternSession.getCurrent();
-      const imageEl = this.dom.guideImage;
-      const fallbackEl = this.dom.guideFallback;
 
       if (!this.guideVisible) {
-        imageEl.classList.add("hidden");
-        fallbackEl.classList.add("hidden");
+        this.dom.guideImage.classList.add("hidden");
+        this.dom.guideFallback.classList.add("hidden");
         this.dom.guideButton.textContent = "下書きを表示";
         return;
       }
 
-      const src = ns.patternSampleResolver(pattern);
-      imageEl.onload = () => {
-        imageEl.classList.remove("hidden");
-        fallbackEl.classList.add("hidden");
-      };
-      imageEl.onerror = () => {
-        imageEl.classList.add("hidden");
-        fallbackEl.textContent = pattern?.expression || "";
-        fallbackEl.classList.remove("hidden");
-      };
-      imageEl.alt = `下書き: ${pattern?.label || pattern?.expression || ""}`;
-      imageEl.src = src;
+      this.renderPatternImage({
+        imageEl: this.dom.guideImage,
+        fallbackEl: this.dom.guideFallback,
+        pattern,
+        altPrefix: "下書き",
+      });
       this.dom.guideButton.textContent = this.guideVisible ? "下書きを隠す" : "下書きを表示";
     }
 
     renderWordModel(pattern) {
-      const imageEl = this.dom.modelImage;
-      const fallbackEl = this.dom.modelFallback;
+      this.renderPatternImage({
+        imageEl: this.dom.modelImage,
+        fallbackEl: this.dom.modelFallback,
+        pattern,
+        altPrefix: "手本",
+      });
+    }
+
+    renderPatternImage({ imageEl, fallbackEl, pattern, altPrefix }) {
       const src = ns.patternSampleResolver(pattern);
 
       imageEl.onload = () => {
@@ -1398,7 +1395,7 @@
         fallbackEl.textContent = pattern?.expression || "";
         fallbackEl.classList.remove("hidden");
       };
-      imageEl.alt = `手本: ${pattern?.label || pattern?.expression || ""}`;
+      imageEl.alt = `${altPrefix}: ${pattern?.label || pattern?.expression || ""}`;
       imageEl.src = src;
     }
 
@@ -1494,9 +1491,8 @@
               </label>
 
               <label class="settings-field settings-field-toggle">
-                <span class="settings-label">終了画面のアニメーション</span>
+                <span class="settings-label">アニメーション</span>
                 <input id="settings-praise-animation" type="checkbox" ${settings.praiseAnimationEnabled ? "checked" : ""}>
-                <span class="inline-note">練習終了時のピクトグラム演出を切り替えます。</span>
               </label>
 
               <div class="settings-actions">

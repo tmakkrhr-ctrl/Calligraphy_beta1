@@ -845,6 +845,7 @@ button.set-card:focus-visible {
 
 .word-practice-page {
   padding: 14px;
+  --word-stage-height: clamp(140px, 20dvh, 190px);
 }
 
 .word-practice-page .page-head {
@@ -901,13 +902,13 @@ button.set-card:focus-visible {
 /* 短い表現練習の下地を、ノート風の横罫にする。 */
 .notebook-stage {
   background:
-    repeating-linear-gradient(
+    /* repeating-linear-gradient(
       to bottom,
       rgba(21, 60, 111, 0.06) 0,
       rgba(21, 60, 111, 0.06) 2px,
       transparent 2px,
       transparent 58px
-    ),
+    ), */
     linear-gradient(180deg, #ffffff, #f4f8ff);
 }
 
@@ -916,12 +917,9 @@ button.set-card:focus-visible {
   display: none;
 }
 
-.reference-stage-word {
-  min-height: clamp(140px, 20dvh, 190px);
-}
-
+.reference-stage-word,
 .notebook-stage-practice {
-  min-height: clamp(220px, 35dvh, 300px);
+  min-height: var(--word-stage-height);
 }
 
 /* 「下書きを表示」で出す、薄い式全体ガイド。 */
@@ -966,25 +964,16 @@ button.set-card:focus-visible {
   word-break: break-word;
 }
 
-.word-model-image {
+.word-stage-image {
   position: absolute;
-  inset: 8px;
-  width: calc(100% - 16px);
-  height: calc(100% - 16px);
-  object-fit: contain;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
-.guide-overlay-image {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  top: 42px;
-  width: calc(100% - 48px);
-  height: calc(100% - 84px);
-  object-fit: contain;
-}
-
-.guide-overlay-image {
+.word-stage-image-guide {
   opacity: 0.16;
   pointer-events: none;
   z-index: 1;

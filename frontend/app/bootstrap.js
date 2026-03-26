@@ -91,10 +91,10 @@
           { pattern: "/practice/char/:groupId/:setId", createPage: () => new ns.CharPracticePage(this.router, deps) },
           // 階層: スタート画面 -> 短い表現で練習
           // 工事が終わるまで既存処理は止めておく。
-          // { pattern: "/practice/words", createPage: () => new ns.WordCategoryListPage(this.router, deps) },
-          // { pattern: "/practice/words/:categoryId/success", createPage: () => new ns.WordPracticeSuccessPage(this.router, deps) },
-          // { pattern: "/practice/words/:categoryId/:patternId", createPage: () => new ns.WordPracticePage(this.router, deps) },
-          // { pattern: "/practice/words/:categoryId", createPage: () => new ns.WordPatternListPage(this.router, deps) },
+          { pattern: "/practice/words", createPage: () => new ns.WordCategoryListPage(this.router, deps) },
+          { pattern: "/practice/words/:categoryId/success", createPage: () => new ns.WordPracticeSuccessPage(this.router, deps) },
+          { pattern: "/practice/words/:categoryId/:patternId", createPage: () => new ns.WordPracticePage(this.router, deps) },
+          { pattern: "/practice/words/:categoryId", createPage: () => new ns.WordPatternListPage(this.router, deps) },
           {
             pattern: "/practice/words/:categoryId/success",
             createPage: () => new ns.PlaceholderPage(this.router, deps, {
@@ -104,33 +104,33 @@
               message: "短い表現で練習は現在工事中です。",
             }),
           },
-          {
-            pattern: "/practice/words/:categoryId/:patternId",
-            createPage: () => new ns.PlaceholderPage(this.router, deps, {
-              title: "短い表現で練習",
-              subtitle: "工事中",
-              path: "/practice/words/:categoryId/:patternId",
-              message: "短い表現で練習は現在工事中です。",
-            }),
-          },
-          {
-            pattern: "/practice/words/:categoryId",
-            createPage: () => new ns.PlaceholderPage(this.router, deps, {
-              title: "短い表現で練習",
-              subtitle: "工事中",
-              path: "/practice/words/:categoryId",
-              message: "短い表現で練習は現在工事中です。",
-            }),
-          },
-          {
-            pattern: "/practice/words",
-            createPage: () => new ns.PlaceholderPage(this.router, deps, {
-              title: "短い表現で練習",
-              subtitle: "工事中",
-              path: "/practice/words",
-              message: "短い表現で練習は現在工事中です。",
-            }),
-          },
+          // {
+          //   pattern: "/practice/words/:categoryId/:patternId",
+          //   createPage: () => new ns.PlaceholderPage(this.router, deps, {
+          //     title: "短い表現で練習",
+          //     subtitle: "工事中",
+          //     path: "/practice/words/:categoryId/:patternId",
+          //     message: "短い表現で練習は現在工事中です。",
+          //   }),
+          // },
+          // {
+          //   pattern: "/practice/words/:categoryId",
+          //   createPage: () => new ns.PlaceholderPage(this.router, deps, {
+          //     title: "短い表現で練習",
+          //     subtitle: "工事中",
+          //     path: "/practice/words/:categoryId",
+          //     message: "短い表現で練習は現在工事中です。",
+          //   }),
+          // },
+          // {
+          //   pattern: "/practice/words",
+          //   createPage: () => new ns.PlaceholderPage(this.router, deps, {
+          //     title: "短い表現で練習",
+          //     subtitle: "工事中",
+          //     path: "/practice/words",
+          //     message: "短い表現で練習は現在工事中です。",
+          //   }),
+          // },
           // 設定画面ではユーザー名・音量・終了画面の演出を編集できる。
           { pattern: "/settings", createPage: () => new ns.SettingsPage(this.router, deps) },
           {

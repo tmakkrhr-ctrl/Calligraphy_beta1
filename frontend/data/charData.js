@@ -12,16 +12,14 @@
     {
       id: "greek-upper",
       name: "ギリシャ文字　大文字",
-      description: "工事中",
-      previewChars: ["Α", "Β", "Γ", "Δ"],
-      status: "construction",
+      previewChars: ["Γ", "Δ","Θ","Λ"],
+      status: "ready",
     },
     {
       id: "fraktur-lower",
       name: "フラクトゥール　小文字",
-      description: "工事中",
-      previewChars: ["a", "b", "c", "d"],
-      status: "construction",
+      previewChars: ["フラクトゥールa", "フラクトゥールb", "フラクトゥールc", "フラクトゥールd"],
+      status: "ready",
     },
     {
       id: "fraktur-upper",
@@ -70,6 +68,24 @@
       chars: ["φ", "χ", "ψ", "ω"],
     },
     {
+      id: "greek-upper1",
+      name: "ギリシャ文字　小文字 1",
+      groupId: "greek-upper",
+      chars: ["Γ", "Δ","Θ","Λ"]
+    },
+    {
+      id: "greek-upper2",
+      name: "ギリシャ文字　大文字 2",
+      groupId: "greek-upper",
+      chars: ["三", "Π","Σ","Υ"]
+    },
+    {
+      id: "greek-upper3",
+      name: "ギリシャ文字　大文字 3",
+      groupId: "greek-upper",
+      chars: ["Φ", "Ψ","Ω"],
+    },
+    {
       id: "fraktur-Capital-basic1",
       name: "フラクトゥール　大文字 1",
       groupId: "fraktur-upper",
@@ -111,7 +127,48 @@
       groupId: "fraktur-upper",
       chars: ["フラクトゥールY", "フラクトゥールZ"],
     },
-    // { id: "fractur-basic1", name: "フラクトゥール 1", chars: ["フラクトゥールa", "フラクトゥールb", "フラクトゥールc", "フラクトゥールd"] }
+    { 
+      id: "fractur-basic1", 
+      name: "フラクトゥール　小文字 1", 
+      groupId: "fraktur-lower",
+      chars: ["フラクトゥールa", "フラクトゥールb", "フラクトゥールc", "フラクトゥールd"] 
+    },
+    { 
+      id: "fractur-basic1", 
+      name: "フラクトゥール　小文字 2", 
+      groupId: "fraktur-lower",
+      chars: ["フラクトゥールe", "フラクトゥールf", "フラクトゥールg", "フラクトゥールh"] 
+    },
+    { 
+      id: "fractur-basic3", 
+      name: "フラクトゥール　小文字 3", 
+      groupId: "fraktur-lower",
+      chars: ["フラクトゥールi", "フラクトゥールj", "フラクトゥールk", "フラクトゥールl"] 
+    },
+    { 
+      id: "fractur-basic4", 
+      name: "フラクトゥール　小文字 4", 
+      groupId: "fraktur-lower",
+      chars: ["フラクトゥールm", "フラクトゥールn", "フラクトゥールo", "フラクトゥールp"] 
+    },
+    { 
+      id: "fractur-basic5", 
+      name: "フラクトゥール　小文字 5", 
+      groupId: "fraktur-lower",
+      chars: ["フラクトゥールq", "フラクトゥールr", "フラクトゥールs", "フラクトゥールt"] 
+    },
+    { 
+      id: "fractur-basic6", 
+      name: "フラクトゥール　小文字 6", 
+      groupId: "fraktur-lower",
+      chars: ["フラクトゥールu", "フラクトゥールv", "フラクトゥールw", "フラクトゥールx"] 
+    },
+    { 
+      id: "fractur-basic7", 
+      name: "フラクトゥール　小文字 7", 
+      groupId: "fraktur-lower",
+      chars: ["フラクトゥールy", "フラクトゥールz"] 
+    },
   ];
 
   // 階層: スタート画面 -> 短い表現で練習 -> カテゴリー -> 練習する表現
@@ -119,14 +176,12 @@
     {
       id: "DerivativeIntegral",
       name: "微分積分学",
-      description: "微分積分学で書くことの多い並びを練習します。",
       status: "ready",
       patterns: [
         {
           id: "delta-epsilon",
           label: "イプシロンデルタ論法",
           expression: "∀ε>0 ∃δ>0 ...",
-          note: "イプシロンデルタ論法を一通り書く練習です。",
         },
       ],
     },
@@ -135,7 +190,6 @@
       name: "物理で使う表現",
       description: "工事中",
       status: "construction",
-      previewText: "工事中",
       patterns: [],
     },
   ];
@@ -174,6 +228,17 @@
     "χ": "chi",
     "ψ": "psi",
     "ω": "omega",
+    "Γ": "CapitalGamma",
+    "Δ": "CapitalDelta",
+    "Θ": "CapitalTheta",
+    "Λ": "CapitalLambda",
+    "三": "CapitalXi",
+    "Π": "CapitalPi",
+    "Σ": "CapitalSigma",
+    "Υ": "CapitalUpsilon",
+    "Φ": "CapitalPhi",
+    "Ψ": "CapitalPsi",
+    "Ω": "CapitalOmega",
     "フラクトゥールA": "frakCapitalA",
     "フラクトゥールB": "frakCapitalB",
     "フラクトゥールC": "frakCapitalC",
@@ -200,10 +265,32 @@
     "フラクトゥールX": "frakCapitalX",
     "フラクトゥールY": "frakCapitalY",
     "フラクトゥールZ": "frakCapitalZ",
-    // "フラクトゥールa": "fraka",
-    // "フラクトゥールb": "frakb",
-    // "フラクトゥールc": "frakc",
-    // "フラクトゥールd": "frakd",
+    "フラクトゥールa": "frakA",
+    "フラクトゥールb": "frakB",
+    "フラクトゥールc": "frakC",
+    "フラクトゥールd": "frakD",
+    "フラクトゥールe": "frakE",
+    "フラクトゥールf": "frakF",
+    "フラクトゥールg": "frakG",
+    "フラクトゥールh": "frakH",
+    "フラクトゥールi": "frakI",
+    "フラクトゥールj": "frakJ",
+    "フラクトゥールk": "frakK",
+    "フラクトゥールl": "frakL",
+    "フラクトゥールm": "frakM",
+    "フラクトゥールn": "frakN",
+    "フラクトゥールo": "frakO",
+    "フラクトゥールp": "frakP",
+    "フラクトゥールq": "frakQ",
+    "フラクトゥールr": "frakR",
+    "フラクトゥールs": "frakS",
+    "フラクトゥールt": "frakT",
+    "フラクトゥールu": "frakU",
+    "フラクトゥールv": "frakV",
+    "フラクトゥールw": "frakW",
+    "フラクトゥールx": "frakX",
+    "フラクトゥールy": "frakY",
+    "フラクトゥールz": "frakZ",
   };
 
   // 似字チェックで使う、練習文字と見分けたい文字の対応表。
