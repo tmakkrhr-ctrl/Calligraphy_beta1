@@ -194,16 +194,21 @@
         {
           id: "delta-epsilon",
           label: "イプシロンデルタ論法",
-          expression: "∀ε>0 ∃δ>0 ...",
+          expression: "",
         },
       ],
     },
     {
       id: "physics-expressions",
       name: "物理で使う表現",
-      description: "工事中",
-      status: "construction",
-      patterns: [],
+      status: "ready",
+      patterns: [
+        {
+          id: "schrodingerEq",
+          label: "1 次元シュレディンガー方程式" ,
+          expression:"",
+        },
+      ],
     },
   ];
 
@@ -324,5 +329,6 @@
   // 「1文字練習」と同じく、画面側ではこの対応表を通して画像を引く。
   ns.patternSlugMap = {
     "delta-epsilon": "epsilondelta",
+    "schrodingerEq": "schrodingerEq",
   };
 })(window.MathCalligraphy = window.MathCalligraphy || {});
