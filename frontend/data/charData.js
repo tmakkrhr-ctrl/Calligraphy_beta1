@@ -6,7 +6,6 @@
     {
       id: "greek-lower",
       name: "ギリシャ文字　小文字",
-      description: "α から ω まで、4文字ずつのセットで練習します。",
       previewChars: ["α", "β", "γ", "δ"],
       status: "ready",
     },
@@ -27,7 +26,6 @@
     {
       id: "fraktur-upper",
       name: "フラクトゥール　大文字",
-      description: "A から Z まで、4文字ずつのセットで練習します。",
       previewChars: ["フラクトゥールA", "フラクトゥールB", "フラクトゥールC", "フラクトゥールD"],
       status: "ready",
     },

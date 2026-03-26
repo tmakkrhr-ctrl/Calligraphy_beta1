@@ -94,7 +94,6 @@
               <p>${ns.DomUtils.escapeHtml(this.config.subtitle)}</p>
             </div>
             <div class="page-head-actions">
-              <span class="path-chip">${ns.DomUtils.escapeHtml(this.config.path)}</span>
               <button id="placeholder-home-button" class="btn btn-ghost" type="button">ホームへ</button>
             </div>
           </div>
@@ -155,7 +154,6 @@
           <div class="page-head">
             <div>
               <h2>ホーム</h2>
-              <p>練習モードを選んでください</p>
             </div>
             <div class="page-head-actions">
             </div>
@@ -167,7 +165,6 @@
                 ${(firstCharCategory?.previewChars || []).slice(0, 4).map((char) => createSampleThumbMarkup(char)).join("")}
               </div>
               <p class="menu-card-title">1文字練習</p>
-              <p class="menu-card-desc">文字を1つずつ丁寧に練習します。</p>
             </button>
             <button type="button" class="menu-card menu-card-feature" id="start-word-button">
               ${firstWordCategory?.patterns?.[0]
@@ -178,7 +175,6 @@
                 })
                 : `<div class="card-preview card-preview-pattern"><p>${ns.DomUtils.escapeHtml(firstWordCategory?.previewText || "工事中")}</p></div>`}
               <p class="menu-card-title">短い表現で練習</p>
-              <p class="menu-card-desc">授業ノートでよく使う式や並びを練習します。</p>
             </button>
             <button type="button" class="menu-card menu-card-feature" id="start-settings-button">
               <div class="card-preview card-preview-settings">
@@ -187,7 +183,6 @@
                 <span>名前変更</span>
               </div>
               <p class="menu-card-title">設定</p>
-              <p class="menu-card-desc">ユーザー名や終了画面の演出などを調整できます。</p>
             </button>
           </div>
         </section>
@@ -219,10 +214,8 @@
           <div class="page-head">
             <div>
               <h2>1文字練習</h2>
-              <p>まずは練習したい文字の種類を選んでください。</p>
             </div>
             <div class="page-head-actions">
-              <span class="path-chip">/practice/char</span>
               <button id="char-group-home-button" class="btn btn-ghost" type="button">ホームへ</button>
             </div>
           </div>
@@ -284,13 +277,11 @@
               <p>${ns.DomUtils.escapeHtml(group.name)}</p>
             </div>
             <div class="page-head-actions">
-              <span class="path-chip">${ns.DomUtils.escapeHtml(`/practice/char/${group.id}`)}</span>
               <button id="charset-back-button" class="btn btn-ghost" type="button">前の画面へ</button>
               <button id="charset-home-button" class="btn btn-ghost" type="button">ホームへ</button>
             </div>
           </div>
           <div class="page-section-intro">
-            <p>${ns.DomUtils.escapeHtml(group.status === "construction" ? "工事中" : "練習したい文字セットを選んでください。")}</p>
           </div>
           <div class="card-grid card-grid-sets" id="char-set-grid"></div>
         </section>
@@ -425,9 +416,6 @@
               <h2>1文字練習</h2>
               <p id="set-name"></p>
             </div>
-            <div class="page-head-actions">
-              <span class="path-chip" id="route-chip"></span>
-            </div>
           </div>
 
           <div class="practice-layout practice-layout-char">
@@ -445,7 +433,6 @@
                 </div>
                 <p id="page-indicator" class="page-indicator"></p>
                 <p id="practice-count" class="sub-count"></p>
-                <p id="route-note" class="route-note"></p>
               </div>
             </section>
 
@@ -478,8 +465,6 @@
                   <button id="home-button" class="btn btn-ghost" type="button">ホームへ</button>
                 </div>
               </div>
-
-              <div id="status-message" class="status" role="status"></div>
             </aside>
           </div>
 
@@ -496,8 +481,6 @@
     queryDom() {
       return {
         setName: this.root.querySelector("#set-name"),
-        routeChip: this.root.querySelector("#route-chip"),
-        routeNote: this.root.querySelector("#route-note"),
         pageIndicator: this.root.querySelector("#page-indicator"),
         practiceCount: this.root.querySelector("#practice-count"),
         templateButton: this.root.querySelector("#template-button"),
@@ -507,7 +490,6 @@
         nextButton: this.root.querySelector("#next-button"),
         backListButton: this.root.querySelector("#back-list-button"),
         homeButton: this.root.querySelector("#home-button"),
-        statusMessage: this.root.querySelector("#status-message"),
         referenceStage: this.root.querySelector("#reference-stage"),
         templatePlaceholder: this.root.querySelector("#template-placeholder"),
         templateImage: this.root.querySelector("#template-image"),
@@ -966,7 +948,6 @@
       const currentChar = this.deps.session.getCurrent();
       const currentIndex = this.deps.session.getCurrentIndex();
       const total = this.deps.session.getTotalCount();
-      const routePath = this.currentRoutePath();
       const practiced = this.deps.practiceTracker.getItemCount(`char:${this.deps.session.getSetId()}`, currentChar);
 
       this.dom.setName.textContent = setName;
@@ -974,8 +955,6 @@
       this.renderAlikeImage(currentChar);
       this.dom.pageIndicator.textContent = `${currentIndex + 1}/${total}`;
       this.dom.practiceCount.textContent = `これまでに ${practiced} 回練習`;
-      this.dom.routeChip.textContent = routePath;
-      this.dom.routeNote.textContent = `setId=${this.deps.session.getSetId()} / index=${currentIndex}`;
 
       this.templatePanel.setCurrentChar(currentChar);
       this.templatePanel.render();
@@ -1016,7 +995,6 @@
           <div class="success-center">
             <p class="success-title">練習終了！</p>
             <p class="success-subtitle">合計 ${totalPractice} 回の記録になりました。</p>
-            <p class="success-route">${ns.DomUtils.escapeHtml(`/practice/char/${groupId}/${set.id}/success`)}</p>
             ${createPraiseMarkup(settings)}
           </div>
         </section>
@@ -1042,7 +1020,6 @@
               <p>よく使う式や文字の並びを、まとまりで練習します。</p>
             </div>
             <div class="page-head-actions">
-              <span class="path-chip">/practice/words</span>
               <button id="word-home-button" class="btn btn-ghost" type="button">ホームへ</button>
             </div>
           </div>
@@ -1105,7 +1082,6 @@
               <p>${ns.DomUtils.escapeHtml(category.name)}</p>
             </div>
             <div class="page-head-actions">
-              <span class="path-chip">${ns.DomUtils.escapeHtml(`/practice/words/${category.id}`)}</span>
               <button id="word-back-button" class="btn btn-ghost" type="button">前の画面へ</button>
               <button id="word-list-home-button" class="btn btn-ghost" type="button">ホームへ</button>
             </div>
@@ -1219,9 +1195,6 @@
               <h2>短い表現で練習</h2>
               <p id="word-category-name"></p>
             </div>
-            <div class="page-head-actions">
-              <span class="path-chip" id="word-route-chip"></span>
-            </div>
           </div>
 
           <div class="practice-layout practice-layout-words">
@@ -1273,8 +1246,6 @@
                   <button id="word-home-button" class="btn btn-ghost" type="button">ホームへ</button>
                 </div>
               </div>
-
-              <div id="word-status-message" class="status" role="status"></div>
             </aside>
           </div>
         </section>
@@ -1284,7 +1255,6 @@
     queryDom() {
       return {
         categoryName: this.root.querySelector("#word-category-name"),
-        routeChip: this.root.querySelector("#word-route-chip"),
         patternTitle: this.root.querySelector("#word-pattern-title"),
         modelImage: this.root.querySelector("#word-model-image"),
         modelFallback: this.root.querySelector("#word-model-fallback"),
@@ -1299,7 +1269,6 @@
         nextButton: this.root.querySelector("#word-next-button"),
         listButton: this.root.querySelector("#word-list-button"),
         homeButton: this.root.querySelector("#word-home-button"),
-        statusMessage: this.root.querySelector("#word-status-message"),
         canvasStage: this.root.querySelector("#word-canvas-stage"),
         canvas: this.root.querySelector("#word-draw-canvas"),
       };
@@ -1435,14 +1404,12 @@
     render() {
       const categoryName = this.deps.patternSession.getCategoryName();
       const pattern = this.deps.patternSession.getCurrent();
-      const routePath = this.currentRoutePath();
       const practiced = this.deps.practiceTracker.getItemCount(
         `word:${this.deps.patternSession.getCategoryId()}`,
         pattern?.id || ""
       );
 
       this.dom.categoryName.textContent = categoryName;
-      this.dom.routeChip.textContent = routePath;
       this.dom.patternTitle.textContent = pattern?.label || "";
       this.renderWordModel(pattern);
       this.dom.patternNote.textContent = pattern?.note || "";
@@ -1483,7 +1450,6 @@
           <div class="success-center">
             <p class="success-title">練習終了</p>
             <p class="success-subtitle">このカテゴリの記録は ${totalPractice} 回です。</p>
-            <p class="success-route">${ns.DomUtils.escapeHtml(`/practice/words/${category.id}/success`)}</p>
             ${createPraiseMarkup(settings)}
           </div>
         </section>
@@ -1509,7 +1475,6 @@
               <p>使い方に合わせて、表示や操作感を調整できます。</p>
             </div>
             <div class="page-head-actions">
-              <span class="path-chip">/settings</span>
               <button id="settings-home-button" class="btn btn-ghost" type="button">ホームへ</button>
             </div>
           </div>

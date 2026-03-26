@@ -260,10 +260,12 @@
 
     set(message) {
       this.appState.lastStatusMessage = message;
+      if (!this.el) return;
       this.el.textContent = message;
     }
 
     restore() {
+      if (!this.el) return;
       this.el.textContent = this.appState.lastStatusMessage || "";
     }
   }
