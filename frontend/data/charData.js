@@ -6,25 +6,32 @@
     {
       id: "greek-lower",
       name: "ギリシャ文字　小文字",
-      previewChars: ["α", "β", "γ", "δ"],
+      previewChars: ["α", "β", "γ"],
       status: "ready",
     },
     {
       id: "greek-upper",
       name: "ギリシャ文字　大文字",
-      previewChars: ["Γ", "Δ","Θ","Λ"],
+      previewChars: ["Γ", "Δ","Θ"],
+      description: "アルファベットの大文字と形が異なる文字のみ掲載",
       status: "ready",
     },
     {
       id: "fraktur-lower",
       name: "フラクトゥール　小文字",
-      previewChars: ["フラクトゥールa", "フラクトゥールb", "フラクトゥールc", "フラクトゥールd"],
+      previewChars: ["フラクトゥールa", "フラクトゥールb", "フラクトゥールc"],
       status: "ready",
     },
     {
       id: "fraktur-upper",
       name: "フラクトゥール　大文字",
-      previewChars: ["フラクトゥールA", "フラクトゥールB", "フラクトゥールC", "フラクトゥールD"],
+      previewChars: ["フラクトゥールA", "フラクトゥールB", "フラクトゥールC"],
+      status: "ready",
+    },
+    {
+      id: "others",
+      name: "その他",
+      previewChars: ["ℵ","∅","∇"],
       status: "ready",
     },
   ];
@@ -169,6 +176,12 @@
       groupId: "fraktur-lower",
       chars: ["フラクトゥールy", "フラクトゥールz"] 
     },
+    {
+      id: "others1",
+      name: "その他 1",
+      groupId: "others",
+      chars: ["ℵ","∅","∇"],
+    },
   ];
 
   // 階層: スタート画面 -> 短い表現で練習 -> カテゴリー -> 練習する表現
@@ -291,6 +304,9 @@
     "フラクトゥールx": "frakX",
     "フラクトゥールy": "frakY",
     "フラクトゥールz": "frakZ",
+    "ℵ": "aleph",
+    "∅": "emptyset",
+    "∇": "nabla",
   };
 
   // 似字チェックで使う、練習文字と見分けたい文字の対応表。
