@@ -1201,8 +1201,8 @@
               <div class="reference-panel word-model-panel">
                 <div class="panel-head">
                   <div>
-                    <p class="label">手本</p>
                     <p class="panel-caption" id="word-pattern-title"></p>
+                    <p class="label">手本</p>
                   </div>
                   <button id="guide-button" class="btn btn-primary" type="button">下書きを表示</button>
                 </div>
@@ -1215,7 +1215,6 @@
 
               <div class="canvas-panel notebook-panel">
                 <div class="canvas-toolbar">
-                  <p>罫線ノートに沿って式のまとまりを書き写せます</p>
                 </div>
                 <div class="canvas-stage notebook-stage notebook-stage-practice" id="word-canvas-stage">
                   <img id="guide-overlay-image" class="word-stage-image word-stage-image-guide hidden" alt="">
@@ -1227,7 +1226,6 @@
 
             <aside class="practice-side">
               <div class="current-char-card compact-card">
-                <p class="label">進み具合</p>
                 <p class="practice-title" id="word-progress-label"></p>
                 <p class="sub-count" id="word-practice-count"></p>
               </div>
